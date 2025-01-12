@@ -16,7 +16,7 @@
 
  **从源码进行安装：**
   ```git
-  git clone https://github.com/Lerobot-Robotics/joycon-robotics.git
+  git clone https://github.com/box2ai_robotics/joycon-robotics.git
   cd joycon-robotics
   pip install -e .
   ```
