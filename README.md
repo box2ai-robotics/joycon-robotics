@@ -21,6 +21,7 @@ This repository is a fork of the following projects:
 
 更多使用和说明手册在[《具身智能数采遥控器使用说明》](具身智能数采遥控器使用说明V0.1.pdf)中。
 
+如果你觉得这对你有帮助，请您帮我们点一颗小星星吧！ ⭐ ⭐ ⭐ ⭐ ⭐
 
 
 
