@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-version = "0.0.1"
+version = "0.0.2"
 
 with open('README.md') as f:
     readme = f.read()
@@ -17,7 +17,7 @@ extra_requirements = [
     "ansitable",
     "progress",
     "typing_extensions",
-    "ipykernel"  
+    "ipykernel",
     "matplotlib"
 ]
 
