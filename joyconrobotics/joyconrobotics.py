@@ -35,7 +35,8 @@ class AttitudeEstimator:
         self.pitch = 0.0 
         self.roll = 0.0   
         self.yaw = 0.0   
-        self.dt = 0.001  
+        # self.dt = 0.01 # lerobot real 
+        self.dt = 0.01  
         self.alpha = 0.5 
         
         self.yaw_diff = 0.0
@@ -48,6 +49,9 @@ class AttitudeEstimator:
         self.direction_Y = vec3(0, 1, 0)
         self.direction_Z = vec3(0, 0, 1)
         self.direction_Q = quat()
+        
+        # self.lpf_roll = LowPassFilter(alpha=0.10)   # lerobot real 
+        # self.lpf_pitch = LowPassFilter(alpha=0.10)  # lerobot real 
         
         self.lpf_roll = LowPassFilter(alpha=0.50)   
         self.lpf_pitch = LowPassFilter(alpha=0.50)  
