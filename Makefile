@@ -2,7 +2,7 @@
 # code by LinCC111 2025.1.13 Box2AI-Robotics copyright 盒桥智能 版权所有
 TEMP_DIR := /tmp/joycon-install-temp
 RULES_DIR := /etc/udev/rules.d
-UDEV_RULES := udev/99-nintendo.rules
+UDEV_RULES := udev/99-nitendo.rules
 NINTENDO_REPO := https://github.com/nicman23/dkms-hid-nintendo
 JOYNCON_REPO := https://github.com/DanielOgorchock/joycond
 
@@ -55,6 +55,6 @@ clean:
 	@echo "Cleanup completed."
 
 # INSTALL ALL TARGET
-install: install_nintendo install_joycond clean install-hid-deps
+install: install_nintendo install_joycond clean install-hid-deps install-udev-rules
 	@echo "All dependencies installed successfully."
 

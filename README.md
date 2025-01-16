@@ -4,7 +4,7 @@
 ## Declaration
 
 This repository is a fork of the following projects:
-- [joycon-python](https://github.com/tocoteron/joycon-python)
+<!-- - [joycon-python](https://github.com/tocoteron/joycon-python) -->
 - [Nintendo_Switch_Reverse_Engineering](https://github.com/dekuNukem/Nintendo_Switch_Reverse_Engineering)
 
 

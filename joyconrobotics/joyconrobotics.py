@@ -142,23 +142,29 @@ class JoyconRobotics:
                  common_rad: bool = True,
                  lerobot: bool = False):
         if device == "right":
-            joycon_id = get_R_id()
+            self.joycon_id = get_R_id()
         elif device == "left":
-            joycon_id = get_L_id()
+            self.joycon_id = get_L_id()
         else:
             print("get a wrong device name of joycon")
-        self.joycon = JoyCon(*joycon_id)
-        print(f"detect {device} {joycon_id=}")
-        self.gyro = GyroTrackingJoyCon(*joycon_id)
+        
+        if self.joycon_id[2][:6] != '9c:54:':
+            raise IOError("joycon-robotics don't support this joycon.")
+        
+        # init joycon
+        self.joycon = JoyCon(*self.joycon_id)
+        # print(f"detect {device} {joycon_id=}")
+        self.gyro = GyroTrackingJoyCon(*self.joycon_id)
         self.lerobot = lerobot
         self.orientation_sensor = AttitudeEstimator(common_rad=common_rad, lerobot=self.lerobot)
-        self.button = ButtonEventJoyCon(*joycon_id)
-        print(f"connect to {device} complete.")
-        print()
+        self.button = ButtonEventJoyCon(*self.joycon_id)
+        # print(f"connect to {device} joycon successful.")
+        
+        print(f"\033[32mconnect to {device} joycon successful.\033[0m")
         if with_calibrate:
             self.reset_joycon()
         
-        # information
+        # more information
         self.gripper_open = gripper_open
         self.gripper_close = gripper_close
         self.gripper_state = 1 # 1 for open, 0 for close
@@ -180,8 +186,8 @@ class JoyconRobotics:
         
         
     def reset_joycon(self):
-        print('waiting for calibrations, please place it horizontally on the desktop.')
-        print('it will takes 4s...')
+        
+        print(f"\033[33mcalibrating(4 seconds)..., please place it horizontally on the desktop.\033[0m")
     
         self.gyro.calibrate()
         self.gyro.reset_orientation
@@ -191,8 +197,7 @@ class JoyconRobotics:
         self.gyro.reset_orientation
         self.orientation_sensor.reset_yaw()
         time.sleep(2)
-        
-        print('Joycon calibrations is complete.')
+        print(f"\033[32mJoycon calibrations is complete.\033[0m")
     
     def check_limits_position(self):
         for i in range(3):

@@ -1,5 +1,5 @@
-from .constants import JOYCON_VENDOR_ID, JOYCON_PRODUCT_IDS
-from .constants import JOYCON_L_PRODUCT_ID, JOYCON_R_PRODUCT_ID
+from .constants import JOYCON_VENDOR_ID, JOYCON_PRODUCT_IDS, JOYCON_SERIAL_HEAD
+from .constants import JOYCON_L_PRODUCT_ID, JOYCON_R_PRODUCT_ID, JOYCON_REPORT_DEFAULT, JOYCON_COLOR_SUPPORT
 import hid
 import time
 import threading
@@ -26,6 +26,9 @@ class JoyCon:
 
         if product_id not in JOYCON_PRODUCT_IDS:
             raise ValueError(f'product_id is invalid: {product_id!r}')
+        
+        if serial[:12] not in JOYCON_SERIAL_HEAD:
+            raise ValueError(f'serial is invalid: {serial!r}')
 
         self.vendor_id   = vendor_id
         self.product_id  = product_id
@@ -100,20 +103,18 @@ class JoyCon:
     def _spi_flash_read(self, address, size) -> bytes:
         assert size <= 0x1d
         argument = address.to_bytes(4, "little") + size.to_bytes(1, "little")
+        
         ack, report = self._send_subcmd_get_response(b'\x10', argument)
         if not ack:
             raise IOError("After SPI read @ {address:#06x}: got NACK")
-        # print(f"############{report[:2]=}")
-        # print(f"############{report[2:7]=}")
-        # print(f"############{argument=}")
         
-        # if report[:2] != b'\x90\x10':
-        #     raise IOError("Something else than the expected ACK was recieved!")
+        out = report[7:size+7]
         
-        # assert report[2:7] == argument, (report[2:5], argument)
-        # assert report[2:6] == argument[:4], (report[2:6], argument)[:4]
-
-        return report[7:size+7]
+        if out == JOYCON_REPORT_DEFAULT and report[:3] != JOYCON_COLOR_SUPPORT:
+            print(f'{report[:3]=}')
+            raise IOError("Something else than the expected ACK was recieved!")
+        
+        return out
 
     def _update_input_report(self):  # daemon thread
         while True:
@@ -128,8 +129,8 @@ class JoyCon:
                 callback(self)
 
     def _read_joycon_data(self):
-        # color_data = self._spi_flash_read(0x6050, 6)
-        color_data=b'\xff\xff\xff\n\n\n'
+        color_data = self._spi_flash_read(0x6050, 6)
+        
         # TODO: use this
         # stick_cal_addr = 0x8012 if self.is_left else 0x801D
         # stick_cal  = self._spi_flash_read(stick_cal_addr, 8)
