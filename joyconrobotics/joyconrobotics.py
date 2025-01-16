@@ -2,19 +2,17 @@
 
 import math
 import time
-from glm import vec2, vec3, quat, angleAxis, eulerAngles
+from glm import vec3, quat, angleAxis, eulerAngles
 
 from .joycon import JoyCon
-from .wrappers import PythonicJoyCon  # as JoyCon
 from .gyro import GyroTrackingJoyCon
 from .event import ButtonEventJoyCon
-from .device import get_device_ids, get_ids_of_type
-from .device import is_id_L
-from .device import get_R_ids, get_L_ids
 from .device import get_R_id, get_L_id
 
 from scipy.spatial.transform import Rotation as R
 import numpy as np
+import threading
+import logging
 
 class LowPassFilter:
     def __init__(self, alpha=0.1):
@@ -27,7 +25,8 @@ class LowPassFilter:
     
 class AttitudeEstimator:
     def __init__(self, 
-                pitch_Threhold = math.pi/2, 
+                pitch_Threhold = math.pi/2.0, 
+                roll_Threhold = math.pi/2.02, 
                 yaw_Threhold = -1, 
                 common_rad = True,
                 lerobot = False
@@ -36,11 +35,13 @@ class AttitudeEstimator:
         self.roll = 0.0   
         self.yaw = 0.0   
         self.dt = 0.01  
-        self.alpha = 0.5 
+        self.alpha = 0.55
         
         self.yaw_diff = 0.0
         self.pitch_rad_T = pitch_Threhold
+        self.roll_rad_T = roll_Threhold
         self.yaw_rad_T = yaw_Threhold
+        
         self.common_rad = common_rad
         self.lerobot = lerobot
         
@@ -51,7 +52,7 @@ class AttitudeEstimator:
         
         self.lowpassfilter_alpha = 0.9
         if self.lerobot:
-            self.lowpassfilter_alpha = 0.20
+            self.lowpassfilter_alpha = 0.08
             
         self.lpf_roll = LowPassFilter(alpha=self.lowpassfilter_alpha)   # lerobot real 
         self.lpf_pitch = LowPassFilter(alpha=self.lowpassfilter_alpha)  # lerobot real 
@@ -65,7 +66,6 @@ class AttitudeEstimator:
     def set_yaw_diff(self,data):
         self.yaw_diff = data
         
-    
     def update(self, gyro_in_rad, accel_in_g):
         self.pitch = 0.0 
         self.roll = 0.0   
@@ -104,7 +104,6 @@ class AttitudeEstimator:
         self.direction_Q *= rotation        
         
         self.yaw = self.direction_X[1]
-        self.yaw = self.yaw + self.yaw_diff    
         
         if self.common_rad:
             self.roll = self.roll * math.pi/1.5
@@ -116,9 +115,14 @@ class AttitudeEstimator:
             if self.lerobot:
                 self.pitch = self.pitch * 3.0 if self.pitch < 0 else self.pitch
                 self.roll = self.roll * math.pi
-            
+        
+        self.yaw = self.yaw - self.yaw_diff    
+        
         if self.pitch_rad_T != -1:
             self.pitch = self.pitch_rad_T if self.pitch > self.pitch_rad_T else (-self.pitch_rad_T if self.pitch < -self.pitch_rad_T else self.pitch) 
+        
+        if self.roll_rad_T != -1:
+            self.roll = self.roll_rad_T if self.roll > self.roll_rad_T else (-self.roll_rad_T if self.roll < -self.roll_rad_T else self.roll) 
         
         if self.yaw_rad_T != -1:
             self.yaw = self.yaw_rad_T if self.yaw > self.yaw_rad_T else (-self.yaw_rad_T if self.yaw < -self.yaw_rad_T else self.yaw) 
@@ -133,7 +137,6 @@ class JoyconRobotics:
                  device: str = "right", 
                  gripper_open: float = 1.0, 
                  gripper_close: float = 0.0, 
-                 with_calibrate: bool = True, 
                  horizontal_stick_mode: str = "y",
                  close_y: bool = False,
                  limit_dof: bool = False,
@@ -147,7 +150,7 @@ class JoyconRobotics:
             self.joycon_id = get_L_id()
         else:
             print("get a wrong device name of joycon")
-        print(f"detect {device} {self.joycon_id=}")
+        # print(f"detect {device} {self.joycon_id=}")
         if self.joycon_id[2][:6] != '9c:54:':
             raise IOError("joycon-robotics don't support this joycon.")
         
@@ -161,9 +164,9 @@ class JoyconRobotics:
         # print(f"connect to {device} joycon successful.")
         
         print(f"\033[32mconnect to {device} joycon successful.\033[0m")
-        if with_calibrate:
-            self.reset_joycon()
+        self.reset_joycon()
         
+        print()
         # more information
         self.gripper_open = gripper_open
         self.gripper_close = gripper_close
@@ -183,6 +186,12 @@ class JoyconRobotics:
         self.dof_speed = dof_speed.copy()
         self.glimit = [[0.000, -0.4,  0.046, -3.1, -1.5, -1.5], 
                   [0.430,  0.4,  0.25,  3.1,  1.5,  1.5]]
+        
+        # Start the thread to read inputs
+        self.running = True
+        self.lock = threading.Lock()
+        self.thread = threading.Thread(target=self.solve_loop, daemon=True)
+        self.thread.start()
         
         
     def reset_joycon(self):
@@ -257,9 +266,9 @@ class JoyconRobotics:
         joycon_button_xup = self.joycon.get_button_x() if self.joycon.is_right() else self.joycon.get_button_up()
         joycon_button_xback = self.joycon.get_button_b() if self.joycon.is_right() else self.joycon.get_button_down()
         if joycon_button_xup == 1:
-            self.position[0] += 0.0005
+            self.position[0] += 0.001
         elif joycon_button_xback == 1:
-            self.position[0] -= 0.0005 
+            self.position[0] -= 0.001 
         
         joycon_button_home = self.joycon.get_button_home() if self.joycon.is_right() else self.joycon.get_button_capture()
         if joycon_button_home == 1:
@@ -292,11 +301,11 @@ class JoyconRobotics:
             else:
                 self.yaw_diff = self.yaw_diff
                 
-            print(f'{self.yaw_diff=}')
+            # print(f'{self.yaw_diff=}')
             self.orientation_sensor.set_yaw_diff(self.yaw_diff)
             
-            print(f'{self.orientation_rad[2]=}')
-            if self.orientation_rad[2] <( 0.04* self.dof_speed[5]) and self.orientation_rad[2] > (-0.04* self.dof_speed[5]):
+            # print(f'{self.orientation_rad[2]=}')
+            if self.orientation_rad[2] < (0.04* self.dof_speed[5]) and self.orientation_rad[2] > (-0.04* self.dof_speed[5]):
                 self.gyro.reset_orientation()
                 self.yaw_diff = 0.0
 
@@ -315,32 +324,21 @@ class JoyconRobotics:
         return self.position, self.gripper_state
                         
                         
-    def get_orientation(self, out_format="euler_rad"): # euler_rad, euler_deg, quaternion,
+    def get_orientation(self): # euler_rad, euler_deg, quaternion,
         self.orientation_rad = self.orientation_sensor.update(self.gyro.gyro_in_rad[0], self.gyro.accel_in_g[0])
         
         if self.if_limit_dof:
             self.check_limits_orientation()
         
         roll, pitch, yaw = self.orientation_rad
-        
         self.direction_vector = vec3(math.cos(pitch) * math.cos(yaw), math.cos(pitch) * math.sin(yaw), math.sin(pitch))
         
-        if out_format == "euler_deg":
-            orientation_output = np.rad2deg(self.orientation_rad)
-        elif out_format == "quaternion":
-            r4 = R.from_euler('xyz', self.orientation_rad, degrees=False)
-            orientation_output = r4.as_quat()
-        else:
-            orientation_output = self.orientation_rad
-        
-        return orientation_output
-
-    def update(self, out_format="euler_rad"):
-        roll, pitch, yaw = self.get_orientation(out_format=out_format)
+        return self.orientation_rad
+    
+    def update(self):
+        roll, pitch, yaw = self.get_orientation()
         self.position, gripper = self.common_update()
-        
-        # self.orientation_rad = [roll, pitch, yaw]
-        
+
         if self.if_limit_dof:
             self.check_limits_position()
             
@@ -349,6 +347,33 @@ class JoyconRobotics:
         
         return self.posture, gripper
     
+    def solve_loop(self):
+        while self.running:
+            try:
+                self.update()
+                # print("solve successful")
+                time.sleep(0.01)
+            except Exception as e:
+                logging.error(f"Error solve_loop from device: {e}")
+                time.sleep(1)  # Wait before retrying
+                self.connect()
+                
+    def get_control(self, out_format="euler_rad"):
+        if out_format == "euler_deg":
+            orientation_output = np.rad2deg(self.orientation_rad)
+        elif out_format == "quaternion":
+            r4 = R.from_euler('xyz', self.orientation_rad, degrees=False)
+            orientation_output = r4.as_quat()
+        else:
+            orientation_output = self.orientation_rad
+            
+        roll, pitch, yaw = orientation_output
+        x,y,z = self.position
+            
+        self.posture = [x,y,z,roll, pitch, yaw]
+        
+        return self.posture, self.gripper_state
+            
     
     # More information
     def get_stick(self):
