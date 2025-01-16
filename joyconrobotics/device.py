@@ -16,16 +16,16 @@ def get_device_ids(debug=False):
         product_string = device["product_string"]
         serial = device.get('serial') or device.get("serial_number")
         
-        if serial[0:6] != '9c:54:':
-            print(f'{serial=}')
-            return (0x057A, product_id, serial)
-        
         if vendor_id != JOYCON_VENDOR_ID:
             continue
         if product_id not in JOYCON_PRODUCT_IDS:
             continue
         if not product_string:
             continue
+        
+        if serial[0:6] != '9c:54:':
+            print(f'{serial=}')
+            return (0x057A, product_id, serial)
         
         out.append((vendor_id, product_id, serial))
 

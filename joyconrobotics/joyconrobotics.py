@@ -35,7 +35,6 @@ class AttitudeEstimator:
         self.pitch = 0.0 
         self.roll = 0.0   
         self.yaw = 0.0   
-        # self.dt = 0.01 # lerobot real 
         self.dt = 0.01  
         self.alpha = 0.5 
         
@@ -50,11 +49,12 @@ class AttitudeEstimator:
         self.direction_Z = vec3(0, 0, 1)
         self.direction_Q = quat()
         
-        # self.lpf_roll = LowPassFilter(alpha=0.10)   # lerobot real 
-        # self.lpf_pitch = LowPassFilter(alpha=0.10)  # lerobot real 
-        
-        self.lpf_roll = LowPassFilter(alpha=0.50)   
-        self.lpf_pitch = LowPassFilter(alpha=0.50)  
+        self.lowpassfilter_alpha = 0.9
+        if self.lerobot:
+            self.lowpassfilter_alpha = 0.20
+            
+        self.lpf_roll = LowPassFilter(alpha=self.lowpassfilter_alpha)   # lerobot real 
+        self.lpf_pitch = LowPassFilter(alpha=self.lowpassfilter_alpha)  # lerobot real 
     
     def reset_yaw(self):
         self.direction_X = vec3(1, 0, 0)
@@ -147,13 +147,13 @@ class JoyconRobotics:
             self.joycon_id = get_L_id()
         else:
             print("get a wrong device name of joycon")
-        
+        print(f"detect {device} {self.joycon_id=}")
         if self.joycon_id[2][:6] != '9c:54:':
             raise IOError("joycon-robotics don't support this joycon.")
         
         # init joycon
         self.joycon = JoyCon(*self.joycon_id)
-        # print(f"detect {device} {joycon_id=}")
+        
         self.gyro = GyroTrackingJoyCon(*self.joycon_id)
         self.lerobot = lerobot
         self.orientation_sensor = AttitudeEstimator(common_rad=common_rad, lerobot=self.lerobot)
@@ -264,10 +264,6 @@ class JoyconRobotics:
         joycon_button_home = self.joycon.get_button_home() if self.joycon.is_right() else self.joycon.get_button_capture()
         if joycon_button_home == 1:
             
-            # print(f'{self.position=}')
-            # print("position:", [f"{x:.3f}" for x in self.position])
-            # print("init_gpos:", [f"{x:.3f}" for x in self.init_gpos])
-            
             if self.position[0] > self.init_gpos[0] + 0.002: 
                 self.position[0] = self.position[0] - 0.002 * self.dof_speed[0] * 2.0
             elif self.position[0] < self.init_gpos[0] - 0.002:
@@ -288,10 +284,6 @@ class JoyconRobotics:
                 self.position[2] = self.position[2] + 0.002 * self.dof_speed[2] * 2.0
             else:
                 self.position[2] = self.position[2]
-            
-            # self.position[1] = self.position[1] - 0.002 if self.position[1] > self.init_gpos[1] + 0.002 else (self.position[1] + 0.002 if self.position[1] < self.init_gpos[1] - 0.002 else self.position[1])
-            # self.position[2] = self.position[2] - 0.002 if self.position[2] > self.init_gpos[2] + 0.002 else (self.position[2] + 0.002 if self.position[2] < self.init_gpos[2] - 0.002 else self.position[2])
-            
             
             if self.orientation_rad[2] > self.init_gpos[5] + 0.04:
                 self.yaw_diff = self.yaw_diff + (0.02 * self.dof_speed[5])  

@@ -110,9 +110,9 @@ class JoyCon:
         
         out = report[7:size+7]
         
-        if out == JOYCON_REPORT_DEFAULT and report[:3] != JOYCON_COLOR_SUPPORT:
-            print(f'{report[:3]=}')
-            raise IOError("Something else than the expected ACK was recieved!")
+        # if out == JOYCON_REPORT_DEFAULT and report[:3] != JOYCON_COLOR_SUPPORT:
+        #     print(f'{report[:3]=}')
+        #     raise IOError("Something else than the expected ACK was recieved!")
         
         return out
 
