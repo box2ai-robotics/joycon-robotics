@@ -188,6 +188,11 @@ class JoyconRobotics:
                   [0.430,  0.4,  0.25,  3.1,  1.5,  1.5]]
         
         # Start the thread to read inputs
+        
+        self.next_episode_button = 0
+        self.restart_episode_button = 0
+        self.button_control = 0
+        
         self.running = True
         self.lock = threading.Lock()
         self.thread = threading.Thread(target=self.solve_loop, daemon=True)
@@ -320,8 +325,22 @@ class JoyconRobotics:
                         self.gripper_state = self.gripper_close
                     else:
                         self.gripper_state = self.gripper_open
+            
+            elif self.joycon.is_right() and event_type == 'a':
+                self.next_episode_button = status
+            elif self.joycon.is_right() and event_type == 'y':
+                self.restart_episode_button = status
         
-        return self.position, self.gripper_state
+        # record
+        if self.joycon.is_right():
+            if self.next_episode_button == 1:
+                self.button_control = 1
+            elif self.restart_episode_button == 1:
+                self.button_control = -1
+            else:
+                self.button_control = 0
+        
+        return self.position, self.gripper_state, self.button_control
                         
                         
     def get_orientation(self): # euler_rad, euler_deg, quaternion,
@@ -337,7 +356,7 @@ class JoyconRobotics:
     
     def update(self):
         roll, pitch, yaw = self.get_orientation()
-        self.position, gripper = self.common_update()
+        self.position, gripper, button_control = self.common_update()
 
         if self.if_limit_dof:
             self.check_limits_position()
@@ -345,7 +364,7 @@ class JoyconRobotics:
         x,y,z = self.position
         self.posture = [x,y,z,roll, pitch, yaw]
         
-        return self.posture, gripper
+        return self.posture, gripper, button_control
     
     def solve_loop(self):
         while self.running:
@@ -372,7 +391,7 @@ class JoyconRobotics:
             
         self.posture = [x,y,z,roll, pitch, yaw]
         
-        return self.posture, self.gripper_state
+        return self.posture, self.gripper_state, self.button_control
             
     
     # More information
