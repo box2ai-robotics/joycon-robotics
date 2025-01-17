@@ -108,7 +108,7 @@ class AttitudeEstimator:
         if self.common_rad:
             self.roll = self.roll * math.pi/1.5
             self.pitch = self.pitch * math.pi/1.5
-            self.yaw = -self.yaw * math.pi/1.8 * 10.0
+            self.yaw = -self.yaw * math.pi/1.8 # * 10.0
             
         else:
             self.yaw = -self.yaw * math.pi/2  
@@ -225,16 +225,16 @@ class JoyconRobotics:
         joycon_stick_v = self.joycon.get_stick_right_vertical() if self.joycon.is_right() else self.joycon.get_stick_left_vertical()
         if joycon_stick_v > 4000:
             # Forward movement: 0.1 speed in the direction of the direction vector.
-            self.position[0] += 0.002 * self.direction_vector[0] * self.dof_speed[0]
+            self.position[0] += 0.001 * self.direction_vector[0] * self.dof_speed[0]
             if not self.if_close_y:
-                self.position[1] += 0.002 * self.direction_vector[1] * self.dof_speed[1]
-            self.position[2] += 0.002 * self.direction_vector[2] * self.dof_speed[2]     
+                self.position[1] += 0.001 * self.direction_vector[1] * self.dof_speed[1]
+            self.position[2] += 0.001 * self.direction_vector[2] * self.dof_speed[2]     
         elif joycon_stick_v < 1000:
             # Backward movement: 0.1 speed in the opposite direction of the direction vector.
-            self.position[0] -= 0.002 * self.direction_vector[0] * self.dof_speed[0]
+            self.position[0] -= 0.001 * self.direction_vector[0] * self.dof_speed[0]
             if not self.if_close_y:
-                self.position[1] -= 0.002 * self.direction_vector[1] * self.dof_speed[1]
-            self.position[2] -= 0.002 * self.direction_vector[2] * self.dof_speed[2]
+                self.position[1] -= 0.001 * self.direction_vector[1] * self.dof_speed[1]
+            self.position[2] -= 0.001 * self.direction_vector[2] * self.dof_speed[2]
         
         joycon_stick_h = self.joycon.get_stick_right_horizontal() if self.joycon.is_right() else self.joycon.get_stick_right_horizontal()
         rotation_matrix_h = np.array([[0, -1, 0], [1, 0, 0],[0, 0, 1]])
@@ -242,13 +242,13 @@ class JoyconRobotics:
         
         if self.horizontal_stick_mode == "y":
             if joycon_stick_h > 4000:
-                self.position[0] += 0.002 * direction_vector_h[0] * self.dof_speed[0]
-                self.position[1] += 0.002 * direction_vector_h[1] * self.dof_speed[1]
-                self.position[2] += 0.002 * direction_vector_h[2] * self.dof_speed[2]   
+                self.position[0] += 0.001 * direction_vector_h[0] * self.dof_speed[0]
+                self.position[1] += 0.001 * direction_vector_h[1] * self.dof_speed[1]
+                self.position[2] += 0.001 * direction_vector_h[2] * self.dof_speed[2]   
             elif joycon_stick_h < 1000:
-                self.position[0] -= 0.002 * direction_vector_h[0] * self.dof_speed[1]
-                self.position[1] -= 0.002 * direction_vector_h[1] * self.dof_speed[2]
-                self.position[2] -= 0.002 * direction_vector_h[2] * self.dof_speed[3]
+                self.position[0] -= 0.001 * direction_vector_h[0] * self.dof_speed[0]
+                self.position[1] -= 0.001 * direction_vector_h[1] * self.dof_speed[1]
+                self.position[2] -= 0.001 * direction_vector_h[2] * self.dof_speed[2]
         elif self.horizontal_stick_mode == "yaw_diff":
             if joycon_stick_h > 4000:
                 if self.yaw_diff < self.glimit[1][5] / 2.0:
@@ -262,47 +262,47 @@ class JoyconRobotics:
         # Common buttons
         joycon_button_up = self.joycon.get_button_r() if self.joycon.is_right() else self.joycon.get_button_l()
         if joycon_button_up == 1:
-            self.position[2] += 0.0005
+            self.position[2] += 0.001 * self.dof_speed[2]
             
         joycon_button_down = self.joycon.get_button_r_stick() if self.joycon.is_right() else self.joycon.get_button_l_stick()
         if joycon_button_down == 1:
-            self.position[2] -= 0.0005
+            self.position[2] -= 0.001 * self.dof_speed[2]
         
         joycon_button_xup = self.joycon.get_button_x() if self.joycon.is_right() else self.joycon.get_button_up()
         joycon_button_xback = self.joycon.get_button_b() if self.joycon.is_right() else self.joycon.get_button_down()
         if joycon_button_xup == 1:
-            self.position[0] += 0.001
+            self.position[0] += 0.001 * self.dof_speed[0]
         elif joycon_button_xback == 1:
-            self.position[0] -= 0.001 
+            self.position[0] -= 0.001 * self.dof_speed[0]
         
         joycon_button_home = self.joycon.get_button_home() if self.joycon.is_right() else self.joycon.get_button_capture()
         if joycon_button_home == 1:
             
             if self.position[0] > self.init_gpos[0] + 0.002: 
-                self.position[0] = self.position[0] - 0.002 * self.dof_speed[0] * 2.0
+                self.position[0] = self.position[0] - 0.001 * self.dof_speed[0] * 2.0
             elif self.position[0] < self.init_gpos[0] - 0.002:
-                self.position[0] = self.position[0] + 0.002 * self.dof_speed[0] * 2.0
+                self.position[0] = self.position[0] + 0.001 * self.dof_speed[0] * 2.0
             else:
                 self.position[0] = self.position[0]
             
             if self.position[1] > self.init_gpos[1] + 0.002: 
-                self.position[1] = self.position[1] - 0.002 * self.dof_speed[1] * 2.0
+                self.position[1] = self.position[1] - 0.001 * self.dof_speed[1] * 2.0
             elif self.position[1] < self.init_gpos[1] - 0.002:
-                self.position[1] = self.position[1] + 0.002 * self.dof_speed[1] * 2.0
+                self.position[1] = self.position[1] + 0.001 * self.dof_speed[1] * 2.0
             else:
                 self.position[1] = self.position[1]
             
             if self.position[2] > self.init_gpos[2] + 0.002: 
-                self.position[2] = self.position[2] - 0.002 * self.dof_speed[2] * 2.0
+                self.position[2] = self.position[2] - 0.001 * self.dof_speed[2] * 2.0
             elif self.position[2] < self.init_gpos[2] - 0.002:
-                self.position[2] = self.position[2] + 0.002 * self.dof_speed[2] * 2.0
+                self.position[2] = self.position[2] + 0.001 * self.dof_speed[2] * 2.0
             else:
                 self.position[2] = self.position[2]
             
-            if self.orientation_rad[2] > self.init_gpos[5] + 0.04:
-                self.yaw_diff = self.yaw_diff + (0.02 * self.dof_speed[5])  
-            elif self.orientation_rad[2] < self.init_gpos[5] - 0.04:
-                self.yaw_diff = self.yaw_diff - (0.02 * self.dof_speed[5])  
+            if self.orientation_rad[2] > self.init_gpos[5] + 0.02 * self.dof_speed[5]:
+                self.yaw_diff = self.yaw_diff + (0.01 * self.dof_speed[5])  
+            elif self.orientation_rad[2] < self.init_gpos[5] - 0.02 * self.dof_speed[5]:
+                self.yaw_diff = self.yaw_diff - (0.01 * self.dof_speed[5])  
             else:
                 self.yaw_diff = self.yaw_diff
                 
@@ -310,7 +310,7 @@ class JoyconRobotics:
             self.orientation_sensor.set_yaw_diff(self.yaw_diff)
             
             # print(f'{self.orientation_rad[2]=}')
-            if self.orientation_rad[2] < (0.04* self.dof_speed[5]) and self.orientation_rad[2] > (-0.04* self.dof_speed[5]):
+            if self.orientation_rad[2] < (0.02 * self.dof_speed[5]) and self.orientation_rad[2] > (-0.02* self.dof_speed[5]):
                 self.gyro.reset_orientation()
                 self.yaw_diff = 0.0
 
