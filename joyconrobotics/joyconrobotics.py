@@ -311,8 +311,9 @@ class JoyconRobotics:
             
             # print(f'{self.orientation_rad[2]=}')
             if self.orientation_rad[2] < (0.02 * self.dof_speed[5]) and self.orientation_rad[2] > (-0.02* self.dof_speed[5]):
-                self.gyro.reset_orientation()
+                self.orientation_sensor.reset_yaw()# gyro.reset_orientation()
                 self.yaw_diff = 0.0
+                self.orientation_sensor.set_yaw_diff(self.yaw_diff)
 
         
         # gripper 
