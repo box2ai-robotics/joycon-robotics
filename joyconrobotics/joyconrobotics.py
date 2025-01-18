@@ -242,13 +242,13 @@ class JoyconRobotics:
         
         if self.horizontal_stick_mode == "y":
             if joycon_stick_h > 4000:
-                self.position[0] += 0.001 * direction_vector_h[0] * self.dof_speed[0]
-                self.position[1] += 0.001 * direction_vector_h[1] * self.dof_speed[1]
-                self.position[2] += 0.001 * direction_vector_h[2] * self.dof_speed[2]   
-            elif joycon_stick_h < 1000:
                 self.position[0] -= 0.001 * direction_vector_h[0] * self.dof_speed[0]
                 self.position[1] -= 0.001 * direction_vector_h[1] * self.dof_speed[1]
-                self.position[2] -= 0.001 * direction_vector_h[2] * self.dof_speed[2]
+                self.position[2] -= 0.001 * direction_vector_h[2] * self.dof_speed[2]   
+            elif joycon_stick_h < 1000:
+                self.position[0] += 0.001 * direction_vector_h[0] * self.dof_speed[0]
+                self.position[1] += 0.001 * direction_vector_h[1] * self.dof_speed[1]
+                self.position[2] += 0.001 * direction_vector_h[2] * self.dof_speed[2]
         elif self.horizontal_stick_mode == "yaw_diff":
             if joycon_stick_h > 4000:
                 if self.yaw_diff < self.glimit[1][5] / 2.0:
