@@ -19,9 +19,11 @@ This repository is a fork of the following projects:
 
 ## [Quick Start Turotial](joycon_robotics_tutorial.ipynb) (just Chinese now 2025.1.13)
 
-更多使用和说明手册在[《具身智能数采遥控器使用说明》](具身智能数采遥控器使用说明.pdf)中。
+更多使用和说明在手册当中[《具身智能数采遥控器使用说明》](具身智能数采遥控器使用说明.pdf)中。
 
 如果你觉得这对你有帮助，请您帮我们点一颗小星星吧！ ⭐ ⭐ ⭐ ⭐ ⭐
+
+更多讨论和交流可以加入QQ群：948755626
 
 
 
