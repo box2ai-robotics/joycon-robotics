@@ -2,7 +2,7 @@
 
 import math
 import time
-from glm import vec3, quat, angleAxis, eulerAngles
+from glm import vec3, quat, angleAxis
 
 from .joycon import JoyCon
 from .gyro import GyroTrackingJoyCon
@@ -29,7 +29,8 @@ class AttitudeEstimator:
                 roll_Threhold = math.pi/2.02, 
                 yaw_Threhold = -1, 
                 common_rad = True,
-                lerobot = False
+                lerobot = False,
+                pitch_down_double = False
                 ):
         self.pitch = 0.0 
         self.roll = 0.0   
@@ -44,13 +45,14 @@ class AttitudeEstimator:
         
         self.common_rad = common_rad
         self.lerobot = lerobot
+        self.pitch_down_double = pitch_down_double
         
         self.direction_X = vec3(1, 0, 0)
         self.direction_Y = vec3(0, 1, 0)
         self.direction_Z = vec3(0, 0, 1)
         self.direction_Q = quat()
         
-        self.lowpassfilter_alpha = 0.9
+        self.lowpassfilter_alpha = 0.1
         if self.lerobot:
             self.lowpassfilter_alpha = 0.08
             
@@ -108,13 +110,14 @@ class AttitudeEstimator:
         if self.common_rad:
             self.roll = self.roll * math.pi/1.5
             self.pitch = self.pitch * math.pi/1.5
-            self.yaw = -self.yaw * math.pi/1.8 # * 10.0
+            self.yaw = -self.yaw * math.pi/1.5 # * 10.0
             
         else:
             self.yaw = -self.yaw * math.pi/2  
-            if self.lerobot:
-                self.pitch = self.pitch * 3.0 if self.pitch < 0 else self.pitch
-                self.roll = self.roll * math.pi
+            
+        if self.pitch_down_double:
+            self.pitch = self.pitch * 3.0 if self.pitch < 0 else self.pitch
+            self.roll = self.roll * math.pi
         
         self.yaw = self.yaw - self.yaw_diff    
         
@@ -140,10 +143,15 @@ class JoyconRobotics:
                  horizontal_stick_mode: str = "y",
                  close_y: bool = False,
                  limit_dof: bool = False,
+                 glimit: list = [[0.125, -0.4,  0.046, -3.1, -1.5, -1.57], 
+                                 [0.380,  0.4,  0.23,  3.1,  1.5,  1.57]],
                  init_gpos: list = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
                  dof_speed: list = [1,1,1,1,1,1],
                  common_rad: bool = True,
-                 lerobot: bool = False):
+                 lerobot: bool = False,
+                 pitch_down_double: bool = False,
+                 without_rest_init: bool = False,
+                 ):
         if device == "right":
             self.joycon_id = get_R_id()
         elif device == "left":
@@ -151,20 +159,23 @@ class JoyconRobotics:
         else:
             print("get a wrong device name of joycon")
         # print(f"detect {device} {self.joycon_id=}")
-        if self.joycon_id[2][:6] != '9c:54:':
-            raise IOError("joycon-robotics don't support this joycon.")
+        if self.joycon_id[2][:6] != '9c:54:' and self.joycon_id != None:
+            raise IOError("There is no joycon for robotics")
         
         # init joycon
         self.joycon = JoyCon(*self.joycon_id)
         
         self.gyro = GyroTrackingJoyCon(*self.joycon_id)
         self.lerobot = lerobot
-        self.orientation_sensor = AttitudeEstimator(common_rad=common_rad, lerobot=self.lerobot)
+        self.pitch_down_double = pitch_down_double
+        self.orientation_sensor = AttitudeEstimator(common_rad=common_rad, lerobot=self.lerobot, pitch_down_double = self.pitch_down_double)
         self.button = ButtonEventJoyCon(*self.joycon_id)
+        self.without_rest_init = without_rest_init
         # print(f"connect to {device} joycon successful.")
         
         print(f"\033[32mconnect to {device} joycon successful.\033[0m")
-        self.reset_joycon()
+        if not self.without_rest_init:
+            self.reset_joycon()
         
         print()
         # more information
@@ -184,8 +195,7 @@ class JoyconRobotics:
         self.if_close_y = close_y
         self.if_limit_dof = limit_dof
         self.dof_speed = dof_speed.copy()
-        self.glimit = [[0.000, -0.4,  0.046, -3.1, -1.5, -1.5], 
-                  [0.430,  0.4,  0.25,  3.1,  1.5,  1.5]]
+        self.glimit = glimit
         
         # Start the thread to read inputs
         
