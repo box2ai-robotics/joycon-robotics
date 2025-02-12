@@ -52,7 +52,7 @@ class AttitudeEstimator:
         self.direction_Z = vec3(0, 0, 1)
         self.direction_Q = quat()
         
-        self.lowpassfilter_alpha = 0.1
+        self.lowpassfilter_alpha = 0.05
         if self.lerobot:
             self.lowpassfilter_alpha = 0.08
             
@@ -117,7 +117,7 @@ class AttitudeEstimator:
             
         if self.pitch_down_double:
             self.pitch = self.pitch * 3.0 if self.pitch < 0 else self.pitch
-            self.roll = self.roll * math.pi
+            # self.roll = self.roll * math.pi
         
         self.yaw = self.yaw - self.yaw_diff    
         
@@ -145,12 +145,14 @@ class JoyconRobotics:
                  limit_dof: bool = False,
                  glimit: list = [[0.125, -0.4,  0.046, -3.1, -1.5, -1.57], 
                                  [0.380,  0.4,  0.23,  3.1,  1.5,  1.57]],
-                 init_gpos: list = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                 init_gpos: list = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], # just use the position
                  dof_speed: list = [1,1,1,1,1,1],
                  common_rad: bool = True,
                  lerobot: bool = False,
                  pitch_down_double: bool = False,
                  without_rest_init: bool = False,
+                 offset_euler_rad: list = [0, 0, 0], # adjust the orientation
+                 euler_reverse: list = [1,1,1], # -1 reverse
                  ):
         if device == "right":
             self.joycon_id = get_R_id()
@@ -186,6 +188,7 @@ class JoyconRobotics:
         self.position = init_gpos[0:3].copy()
         self.orientation_rad = init_gpos[3:6].copy()
         self.direction_vector = []
+        self.direction_vector_right = []
         self.yaw_diff = 0.0
         
         self.init_gpos = init_gpos.copy()
@@ -196,6 +199,8 @@ class JoyconRobotics:
         self.if_limit_dof = limit_dof
         self.dof_speed = dof_speed.copy()
         self.glimit = glimit
+        self.offset_euler_rad = offset_euler_rad
+        self.euler_reverse = euler_reverse
         
         # Start the thread to read inputs
         
@@ -247,18 +252,21 @@ class JoyconRobotics:
             self.position[2] -= 0.001 * self.direction_vector[2] * self.dof_speed[2]
         
         joycon_stick_h = self.joycon.get_stick_right_horizontal() if self.joycon.is_right() else self.joycon.get_stick_right_horizontal()
-        rotation_matrix_h = np.array([[0, -1, 0], [1, 0, 0],[0, 0, 1]])
-        direction_vector_h = np.dot(rotation_matrix_h, self.direction_vector)
+        
+        # rotation_matrix_h = np.array([[0, -1, 0], [1, 0, 0],[0, 0, 1]])
+
+        # direction_vector_right = np.dot(rotation_matrix_h, self.direction_vector)
+        # self.direction_vector_right = direction_vector_right
         
         if self.horizontal_stick_mode == "y":
             if joycon_stick_h > 4000:
-                self.position[0] -= 0.001 * direction_vector_h[0] * self.dof_speed[0]
-                self.position[1] -= 0.001 * direction_vector_h[1] * self.dof_speed[1]
-                self.position[2] -= 0.001 * direction_vector_h[2] * self.dof_speed[2]   
+                self.position[0] -= 0.001 * self.direction_vector_right[0] * self.dof_speed[0]
+                self.position[1] -= 0.001 * self.direction_vector_right[1] * self.dof_speed[1]
+                self.position[2] -= 0.001 * self.direction_vector_right[2] * self.dof_speed[2]   
             elif joycon_stick_h < 1000:
-                self.position[0] += 0.001 * direction_vector_h[0] * self.dof_speed[0]
-                self.position[1] += 0.001 * direction_vector_h[1] * self.dof_speed[1]
-                self.position[2] += 0.001 * direction_vector_h[2] * self.dof_speed[2]
+                self.position[0] += 0.001 * self.direction_vector_right[0] * self.dof_speed[0]
+                self.position[1] += 0.001 * self.direction_vector_right[1] * self.dof_speed[1]
+                self.position[2] += 0.001 * self.direction_vector_right[2] * self.dof_speed[2]
         elif self.horizontal_stick_mode == "yaw_diff":
             if joycon_stick_h > 4000:
                 if self.yaw_diff < self.glimit[1][5] / 2.0:
@@ -272,11 +280,18 @@ class JoyconRobotics:
         # Common buttons
         joycon_button_up = self.joycon.get_button_r() if self.joycon.is_right() else self.joycon.get_button_l()
         if joycon_button_up == 1:
-            self.position[2] += 0.001 * self.dof_speed[2]
+            # self.position[2] += 0.001 * self.dof_speed[2]
+            self.position[0] += 0.001 * self.direction_vector_up[0] * self.dof_speed[0]
+            self.position[1] += 0.001 * self.direction_vector_up[1] * self.dof_speed[1]
+            self.position[2] += 0.001 * self.direction_vector_up[2] * self.dof_speed[2]
             
         joycon_button_down = self.joycon.get_button_r_stick() if self.joycon.is_right() else self.joycon.get_button_l_stick()
         if joycon_button_down == 1:
-            self.position[2] -= 0.001 * self.dof_speed[2]
+            # self.position[2] -= 0.001 * self.dof_speed[2]
+            self.position[0] -= 0.001 * self.direction_vector_up[0] * self.dof_speed[0]
+            self.position[1] -= 0.001 * self.direction_vector_up[1] * self.dof_speed[1]
+            self.position[2] -= 0.001 * self.direction_vector_up[2] * self.dof_speed[2]
+            
         
         joycon_button_xup = self.joycon.get_button_x() if self.joycon.is_right() else self.joycon.get_button_up()
         joycon_button_xback = self.joycon.get_button_b() if self.joycon.is_right() else self.joycon.get_button_down()
@@ -332,7 +347,7 @@ class JoyconRobotics:
                 self.reset_joycon()
             elif (self.joycon.is_right() and event_type == 'zr') or (self.joycon.is_left() and event_type == 'zl'):
                 if status == 1:
-                    if self.gripper_state == 1:
+                    if self.gripper_state == self.gripper_open:
                         self.gripper_state = self.gripper_close
                     else:
                         self.gripper_state = self.gripper_open
@@ -357,12 +372,17 @@ class JoyconRobotics:
     def get_orientation(self): # euler_rad, euler_deg, quaternion,
         self.orientation_rad = self.orientation_sensor.update(self.gyro.gyro_in_rad[0], self.gyro.accel_in_g[0])
         
+        roll, pitch, yaw = self.orientation_rad
+        self.direction_vector = vec3(math.cos(pitch) * math.cos(yaw), math.cos(pitch) * math.sin(yaw), math.sin(pitch))
+        self.direction_vector_right = vec3(math.cos(roll) * math.cos(yaw + math.pi/2), math.cos(roll) * math.sin(yaw + math.pi/2), math.sin(roll))
+        self.direction_vector_up = vec3(math.cos(-roll + math.pi/2) * math.cos(pitch + math.pi/2), math.cos(-roll + math.pi/2) * math.sin(pitch + math.pi/2), math.sin(-roll + math.pi/2))
+        
         if self.if_limit_dof:
             self.check_limits_orientation()
         
-        roll, pitch, yaw = self.orientation_rad
-        self.direction_vector = vec3(math.cos(pitch) * math.cos(yaw), math.cos(pitch) * math.sin(yaw), math.sin(pitch))
-        
+        for i in range(3): # deal with offset and reverse
+            self.orientation_rad[i] = (self.orientation_rad[i] + self.offset_euler_rad[i]) * self.euler_reverse[i]
+
         return self.orientation_rad
     
     def update(self):
@@ -429,7 +449,7 @@ class JoyconRobotics:
     
     def set_position(self, set_position):
         # self.x, self.y, self.z = set_position
-        set_position = set_position
+        self.position = set_position
         print('set position complect.')
         
     def close_horizontal_stick(self):
