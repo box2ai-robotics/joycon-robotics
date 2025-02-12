@@ -7,6 +7,7 @@ This repository is a fork of the following projects:
 <!-- - [joycon-python](https://github.com/tocoteron/joycon-python) -->
 - [Nintendo_Switch_Reverse_Engineering](https://github.com/dekuNukem/Nintendo_Switch_Reverse_Engineering)
 
+**This is a fork of RLBench-ACT, see the [RLBench-ACT repository](https://github.com/Boxjod/RLBench_ACT) for more information.**
 
 ## Installation (Ubuntu 20.04)
 
