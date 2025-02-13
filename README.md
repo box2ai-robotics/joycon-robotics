@@ -12,7 +12,7 @@ This repository is a fork of the following projects:
 - **February 12, 2025**: Added support for [RLBench-ACT](https://github.com/box2ai-robotics/joycon-robotics) data collection
 
 
-## Installation (Ubuntu 20.04)
+## Installation (Recommend Ubuntu 20.04 22.04)
 
 ```bash
   git clone https://github.com/box2ai-robotics/joycon-robotics.git
