@@ -9,8 +9,9 @@ This repository is a fork of the following projects:
 
 ## What's New?
 
-- **February 12, 2025**: Added support for [RLBench-ACT](https://github.com/box2ai-robotics/joycon-robotics) data collection
+- **February 24, 2025**: Added support for [Robosuite](https://github.com/box2ai-robotics/robosuite-joycon) controller
 
+- **February 12, 2025**: Added support for [RLBench-ACT](https://github.com/box2ai-robotics/joycon-robotics) data collection
 
 ## Installation (Recommend Ubuntu 20.04 22.04)
 
