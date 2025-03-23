@@ -30,7 +30,8 @@ class AttitudeEstimator:
                 yaw_Threhold = -1, 
                 common_rad = True,
                 lerobot = False,
-                pitch_down_double = False
+                pitch_down_double = False,
+                lowpassfilter_alpha_rate = 0.05
                 ):
         self.pitch = 0.0 
         self.roll = 0.0   
@@ -52,9 +53,9 @@ class AttitudeEstimator:
         self.direction_Z = vec3(0, 0, 1)
         self.direction_Q = quat()
         
-        self.lowpassfilter_alpha = 0.05 # lerobot-plus 0.1
+        self.lowpassfilter_alpha = 0.05 * lowpassfilter_alpha_rate# lerobot-plus 0.1
         if self.lerobot:
-            self.lowpassfilter_alpha = 0.08
+            self.lowpassfilter_alpha = 0.08 * lowpassfilter_alpha_rate
             
         self.lpf_roll = LowPassFilter(alpha=self.lowpassfilter_alpha)   # lerobot real 
         self.lpf_pitch = LowPassFilter(alpha=self.lowpassfilter_alpha)  # lerobot real 
@@ -117,9 +118,9 @@ class AttitudeEstimator:
             
         if self.pitch_down_double:
             self.pitch = self.pitch * 3.0 if self.pitch < 0 else self.pitch
-            # if self.lerobot:
-                # self.roll = self.roll * math.pi/2
-        
+        if self.lerobot:
+            self.roll = self.roll * math.pi/2
+            self.yaw = -self.yaw ** math.pi/1.5 # * 10.0      
         self.yaw = self.yaw - self.yaw_diff    
         
         if self.pitch_rad_T != -1:
@@ -152,12 +153,14 @@ class JoyconRobotics:
                  euler_reverse: list = [1, 1, 1], # -1 reverse
                  direction_reverse: list = [1, 1, 1], # -1 reverse
                  dof_speed: list = [1,1,1,1,1,1],
+                 rotation_filter_alpha_rate = 1,
                  common_rad: bool = True,
                  lerobot: bool = False,
                  pitch_down_double: bool = False,
                  without_rest_init: bool = False,
                  pure_xz: bool = True,
                  change_down_to_gripper: bool = False, # ZR to toggle gripper state is common for lerobot, ARX ARM and VixperX. But for UR, Sawyer and panda you could try this. ZR to go down and stick button to toggle gripper
+                 lowpassfilter_alpha_rate = 0.05,
                  ):
         if device == "right":
             self.joycon_id = get_R_id()
@@ -175,7 +178,8 @@ class JoyconRobotics:
         self.gyro = GyroTrackingJoyCon(*self.joycon_id)
         self.lerobot = lerobot
         self.pitch_down_double = pitch_down_double
-        self.orientation_sensor = AttitudeEstimator(common_rad=common_rad, lerobot=self.lerobot, pitch_down_double = self.pitch_down_double)
+        self.rotation_filter_alpha_rate = rotation_filter_alpha_rate
+        self.orientation_sensor = AttitudeEstimator(common_rad=common_rad, lerobot=self.lerobot, pitch_down_double = self.pitch_down_double, lowpassfilter_alpha_rate = self.rotation_filter_alpha_rate)
         self.button = ButtonEventJoyCon(*self.joycon_id, track_sticks=True)
         self.without_rest_init = without_rest_init
         # print(f"connect to {device} joycon successful.")
@@ -188,7 +192,7 @@ class JoyconRobotics:
         # more information
         self.gripper_open = gripper_open
         self.gripper_close = gripper_close
-        self.gripper_state = gripper_state # 1 for open, 0 for close
+        self.gripper_state = self.gripper_open # 1 for open, 0 for close
         
         self.position = offset_position_m.copy()
         self.orientation_rad = offset_euler_rad.copy()
@@ -249,27 +253,27 @@ class JoyconRobotics:
         # Forward and Backward movement
         joycon_stick_v = self.joycon.get_stick_right_vertical() if self.joycon.is_right() else self.joycon.get_stick_left_vertical()
         if joycon_stick_v > 4000:
-            self.position[0] += 0.001 * self.direction_vector[0] * self.dof_speed[0]
-            self.position[2] += 0.001 * self.direction_vector[2] * self.dof_speed[2]   
+            self.position[0] += 0.001 * self.direction_vector[0] * self.dof_speed[0] * self.direction_reverse[0]
+            self.position[2] += 0.001 * self.direction_vector[2] * self.dof_speed[2] * self.direction_reverse[2]
             if not self.if_close_y: # recommend for lerobot SO100
-                self.position[1] += 0.001 * self.direction_vector[1] * self.dof_speed[1]  
+                self.position[1] += 0.001 * self.direction_vector[1] * self.dof_speed[1] * self.direction_reverse[1]
         elif joycon_stick_v < 1000:
-            self.position[0] -= 0.001 * self.direction_vector[0] * self.dof_speed[0]
-            self.position[2] -= 0.001 * self.direction_vector[2] * self.dof_speed[2]
+            self.position[0] -= 0.001 * self.direction_vector[0] * self.dof_speed[0] * self.direction_reverse[0]
+            self.position[2] -= 0.001 * self.direction_vector[2] * self.dof_speed[2] * self.direction_reverse[2]
             if not self.if_close_y: # recommend for lerobot SO100
-                self.position[1] -= 0.001 * self.direction_vector[1] * self.dof_speed[1]
+                self.position[1] -= 0.001 * self.direction_vector[1] * self.dof_speed[1] * self.direction_reverse[1]
         
         # Left and right movement
         joycon_stick_h = self.joycon.get_stick_right_horizontal() if self.joycon.is_right() else self.joycon.get_stick_left_horizontal()
         if self.horizontal_stick_mode == "y":
             if joycon_stick_h > 4000:
-                self.position[0] -= 0.001 * self.direction_vector_right[0] * self.dof_speed[0]
-                self.position[1] -= 0.001 * self.direction_vector_right[1] * self.dof_speed[1]
-                self.position[2] -= 0.001 * self.direction_vector_right[2] * self.dof_speed[2]   
+                self.position[0] -= 0.001 * self.direction_vector_right[0] * self.dof_speed[0] * self.direction_reverse[0]
+                self.position[1] -= 0.001 * self.direction_vector_right[1] * self.dof_speed[1] * self.direction_reverse[1]
+                self.position[2] -= 0.001 * self.direction_vector_right[2] * self.dof_speed[2] * self.direction_reverse[2]
             elif joycon_stick_h < 1000:
-                self.position[0] += 0.001 * self.direction_vector_right[0] * self.dof_speed[0]
-                self.position[1] += 0.001 * self.direction_vector_right[1] * self.dof_speed[1]
-                self.position[2] += 0.001 * self.direction_vector_right[2] * self.dof_speed[2]
+                self.position[0] += 0.001 * self.direction_vector_right[0] * self.dof_speed[0] * self.direction_reverse[0]
+                self.position[1] += 0.001 * self.direction_vector_right[1] * self.dof_speed[1] * self.direction_reverse[1]
+                self.position[2] += 0.001 * self.direction_vector_right[2] * self.dof_speed[2] * self.direction_reverse[2]
         elif self.horizontal_stick_mode == "yaw_diff": # for lerobot SO100
             if joycon_stick_h > 4000:
                 if self.yaw_diff < self.glimit[1][5] / 2.0:
@@ -286,9 +290,9 @@ class JoyconRobotics:
             if self.pure_xz:
                 self.position[2] += 0.001 * self.dof_speed[2]
             else:
-                self.position[0] += 0.001 * self.direction_vector_up[0] * self.dof_speed[0]
-                self.position[1] += 0.001 * self.direction_vector_up[1] * self.dof_speed[1]
-                self.position[2] += 0.001 * self.direction_vector_up[2] * self.dof_speed[2]
+                self.position[0] += 0.001 * self.direction_vector_up[0] * self.dof_speed[0] * self.direction_reverse[0]
+                self.position[1] += 0.001 * self.direction_vector_up[1] * self.dof_speed[1] * self.direction_reverse[1]
+                self.position[2] += 0.001 * self.direction_vector_up[2] * self.dof_speed[2] * self.direction_reverse[2]
         
         if not self.change_down_to_gripper:
             joycon_button_down = self.joycon.get_button_r_stick() if self.joycon.is_right() else self.joycon.get_button_l_stick()
@@ -299,9 +303,9 @@ class JoyconRobotics:
             if self.pure_xz:
                 self.position[2] -= 0.001 * self.dof_speed[2]
             else:
-                self.position[0] -= 0.001 * self.direction_vector_up[0] * self.dof_speed[0]
-                self.position[1] -= 0.001 * self.direction_vector_up[1] * self.dof_speed[1]
-                self.position[2] -= 0.001 * self.direction_vector_up[2] * self.dof_speed[2]
+                self.position[0] -= 0.001 * self.direction_vector_up[0] * self.dof_speed[0] * self.direction_reverse[0]
+                self.position[1] -= 0.001 * self.direction_vector_up[1] * self.dof_speed[1] * self.direction_reverse[1]
+                self.position[2] -= 0.001 * self.direction_vector_up[2] * self.dof_speed[2] * self.direction_reverse[2]
 
         # Common buttons
         joycon_button_xup = self.joycon.get_button_x() if self.joycon.is_right() else self.joycon.get_button_up()
@@ -355,8 +359,8 @@ class JoyconRobotics:
         # gripper 
         for event_type, status in self.button.events():
             if (self.joycon.is_right() and event_type == 'plus' and status == 1) or (self.joycon.is_left() and event_type == 'minus' and status == 1):
-                self.reset_joycon()
                 self.reset_button = 1
+                self.reset_joycon()
             elif self.joycon.is_right() and event_type == 'a':
                 self.next_episode_button = status
             elif self.joycon.is_right() and event_type == 'y':
@@ -365,7 +369,9 @@ class JoyconRobotics:
                 self.gripper_toggle_button = status
             elif ((self.joycon.is_right() and event_type == 'stick_r_btn') or (self.joycon.is_left() and event_type == 'stick_l_btn')) and self.change_down_to_gripper:
                 self.gripper_toggle_button = status
-            print(f'{event_type=}, {status=}')
+            # print(f'{event_type=}, {status=}')
+            else: 
+                self.reset_button = 0
             
         if self.gripper_toggle_button == 1 :
             if self.gripper_state == self.gripper_open:
@@ -391,18 +397,28 @@ class JoyconRobotics:
     def get_orientation(self): # euler_rad, euler_deg, quaternion,
         self.orientation_rad = self.orientation_sensor.update(self.gyro.gyro_in_rad[0], self.gyro.accel_in_g[0])
         
-        roll, pitch, yaw = self.orientation_rad
-        self.direction_vector_right = vec3(math.cos(roll) * math.cos(yaw + math.pi/2 * self.direction_reverse[1]), math.cos(roll) * math.sin(yaw + math.pi/2 * self.direction_reverse[1]), math.sin(roll))
-        self.direction_vector_up = vec3(math.cos(-roll + math.pi/2 * self.direction_reverse[0]) * math.cos(pitch + math.pi/2 * self.direction_reverse[2]), 
-                                        math.cos(-roll + math.pi/2 * self.direction_reverse[0]) * math.sin(pitch + math.pi/2 * self.direction_reverse[2]), 
-                                        math.sin(-roll + math.pi/2 * self.direction_reverse[0]))
+        # roll, pitch, yaw = self.orientation_rad
+        # self.direction_vector_right = vec3(math.cos(roll) * math.cos(yaw + math.pi/2 * self.euler_reverse[2]), math.cos(roll) * math.sin(yaw + math.pi/2 * self.euler_reverse[2]), math.sin(roll))
+        # self.direction_vector_up = vec3(math.cos(-roll + math.pi/2 * self.euler_reverse[0]) * math.cos(pitch + math.pi/2 * self.euler_reverse[2]), 
+        #                                 math.cos(-roll + math.pi/2 * self.euler_reverse[0]) * math.sin(pitch + math.pi/2 * self.euler_reverse[2]), 
+        #                                 math.sin(-roll + math.pi/2 * self.euler_reverse[0]))
         
         for i in range(3): # deal with offset and reverse
             self.orientation_rad[i] = (self.orientation_rad[i] + self.offset_euler_rad[i]) * self.euler_reverse[i]
             
         roll, pitch, yaw = self.orientation_rad
-        self.direction_vector = vec3(math.cos(pitch) * math.cos(yaw), math.cos(pitch) * math.sin(yaw), math.sin(pitch))
+        # self.direction_vector = vec3(math.cos(pitch) * math.cos(yaw), math.cos(pitch) * math.sin(yaw), math.sin(pitch))
+        self.direction_vector = vec3(math.cos(pitch) * math.cos(yaw), 
+                                     math.cos(pitch) * math.sin(yaw), 
+                                     math.sin(pitch))
+                                     
+        self.direction_vector_right = vec3(math.cos(roll) * math.sin(yaw), 
+                                           math.cos(roll) * math.cos(yaw), 
+                                           math.sin(roll))
         
+        self.direction_vector_up = vec3(math.sin(-roll) * math.sin(-pitch), 
+                                        math.sin(-roll) * math.cos(-pitch), 
+                                        math.cos(-roll))
             
         if self.if_limit_dof:
             self.check_limits_orientation()

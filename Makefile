@@ -39,7 +39,8 @@ install-hid-deps:
 	sudo apt-get install -y \
 		libhidapi-dev \
 		libhidapi-hidraw0 \
-		libhidapi-libusb0
+		libhidapi-libusb0 \
+		libevdev-dev
 
 # INSTALL JOYCON UDEV RULES
 install-udev-rules:
