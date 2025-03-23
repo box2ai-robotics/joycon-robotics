@@ -117,7 +117,7 @@ class AttitudeEstimator:
             self.yaw = -self.yaw * math.pi/2  
             
         if self.pitch_down_double:
-            self.pitch = self.pitch * 4.0 if self.pitch < 0 else self.pitch
+            self.pitch = self.pitch * 3.0 if self.pitch < 0 else self.pitch
         if self.lerobot:
             self.roll = self.roll * math.pi/2
             # self.yaw = -self.yaw * math.pi/1.5 # * 10.0      
