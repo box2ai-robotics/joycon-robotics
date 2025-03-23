@@ -117,10 +117,10 @@ class AttitudeEstimator:
             self.yaw = -self.yaw * math.pi/2  
             
         if self.pitch_down_double:
-            self.pitch = self.pitch * 3.0 if self.pitch < 0 else self.pitch
+            self.pitch = self.pitch * 6.0 if self.pitch < 0 else self.pitch
         if self.lerobot:
             self.roll = self.roll * math.pi/2
-            self.yaw = -self.yaw ** math.pi/1.5 # * 10.0      
+            # self.yaw = -self.yaw * math.pi/1.5 # * 10.0      
         self.yaw = self.yaw - self.yaw_diff    
         
         if self.pitch_rad_T != -1:
@@ -192,7 +192,7 @@ class JoyconRobotics:
         # more information
         self.gripper_open = gripper_open
         self.gripper_close = gripper_close
-        self.gripper_state = self.gripper_open # 1 for open, 0 for close
+        self.gripper_state = gripper_state # 1 for open, 0 for close
         
         self.position = offset_position_m.copy()
         self.orientation_rad = offset_euler_rad.copy()
@@ -460,7 +460,7 @@ class JoyconRobotics:
         x,y,z = self.position
             
         self.posture = [x,y,z,roll, pitch, yaw]
-        
+        # print(f'{self.posture=}')
         return self.posture, self.gripper_state, self.button_control
             
     
