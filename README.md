@@ -36,8 +36,8 @@
   
   <p align="center">
   <picture>
-    <img alt="Joy-Con pairing button" src="media/bocon_pairing.png" style="max-width: 29%;">
-    <img alt="Joy-Con pairing button" src="media/bocon_binding.png" style="max-width: 69%;">
+    <img alt="Joy-Con pairing button" src="media/bocon_pairing.png" style="max-width: 25%;">
+    <img alt="Joy-Con pairing button" src="media/bocon_binding.png" style="max-width: 59%;">
   </picture>
 
 </p>
