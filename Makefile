@@ -40,8 +40,7 @@ install-hid-deps:
 		libhidapi-dev \
 		libhidapi-hidraw0 \
 		libhidapi-libusb0 \
-		libevdev-dev
-
+		
 # INSTALL JOYCON UDEV RULES
 install-udev-rules:
 	@echo "Installing udev rules..."
