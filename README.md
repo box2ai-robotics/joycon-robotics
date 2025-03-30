@@ -25,6 +25,11 @@
 1. ​**First-time Bluetooth Pairing**:
    - Press and hold the small circular button on the side of the Joy-Con for 3 seconds to enter pairing mode.
    - On your computer, search for Bluetooth devices and select either `Joy-Con (R)` or `Joy-Con (L)` to complete pairing.
+<p align="center">
+  <picture>
+    <img alt="Joy-Con pairing button" src="media/bocon_pairing.png" style="max-width: 25%;">
+  </picture>
+</p>
 
 2. ​**Connection Confirmation**:
    - Upon successful pairing, the controller will vibrate at a fixed frequency.
@@ -33,13 +38,10 @@
      - Left Joy-Con's upper trigger (`L`) 
      - Right Joy-Con's upper trigger (`R`)
    - The system will allocate dedicated processes for connection monitoring.
-  
-  <p align="center">
+<p align="center">
   <picture>
-    <img alt="Joy-Con pairing button" src="media/bocon_pairing.png" style="max-width: 25%;">
     <img alt="Joy-Con pairing button" src="media/bocon_binding.png" style="max-width: 59%;">
   </picture>
-
 </p>
 
 3. ​**Subsequent Connections**:
