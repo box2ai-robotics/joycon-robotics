@@ -123,7 +123,7 @@ Tested systems:
 ## More Info
 1. You can follow the [bilibili video account](https://space.bilibili.com/122291348)
 2. Join the discussion on the QQ group: 948755626
-3. [Click here](https://mall.bilibili.com/neul-next/detailuniversal/detail.html?isMerchant=1&page=detailuniversal_detail&saleType=0&itemsId=11623872&loadingShow=1&noTitleBar=1&msource=cps_comments_122291348_cont-1-113730901837643&track_id=__BGMT__&from=&from_spmid=__SPMID) to buy the well-tuned version of the hardware
+3. [Click here](https://item.taobao.com/item.htm?abbucket=16&detail_redpacket_pop=true&id=906794552661&ltk2=17440907659690jpsj3h7uiismft7vle37&ns=1&skuId=5933796995638) to buy the well-tuned version of the hardware.
 
 If this project is helpful to you, please give us a star. We greatly appreciate it! ⭐ ⭐ ⭐ ⭐ ⭐
 
