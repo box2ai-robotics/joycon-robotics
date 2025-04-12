@@ -15,7 +15,7 @@
   
   pip install -e .
   sudo apt-get update
-  sudo apt-get install -y dkms libevdev-dev libudev-dev
+  sudo apt-get install -y dkms libevdev-dev libudev-dev cmake
   make install
 ```
 
