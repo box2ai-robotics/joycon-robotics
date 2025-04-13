@@ -1,7 +1,9 @@
 
-# Joycon-Robotics: Nintendo Switch Joy-Con for Robotics
+# Joycon-Robotics: Convenient and low-cost one- and two-arm teleoperation systems for robots
 
 ## What's New?
+
+- **April 1, 2025**: More new updates coming in [bocon](https://github.com/box2ai-robotics/bocon)
 
 - **February 24, 2025**: Added support for [Robosuite](https://github.com/box2ai-robotics/robosuite-joycon) controller
 
