@@ -125,7 +125,9 @@ Tested systems:
 ## More Info
 1. You can follow the [bilibili video account](https://space.bilibili.com/122291348)
 2. Join the discussion on the QQ group: 948755626
-3. [Click here](https://item.taobao.com/item.htm?abbucket=16&detail_redpacket_pop=true&id=906794552661&ltk2=17440907659690jpsj3h7uiismft7vle37&ns=1&skuId=5933796995638) to buy the well-tuned version of the hardware.
+3. Proprietary Tuned Edition Hardware Purchase Information:
+  - 中国大陆用户：淘宝官方店铺购买链接（硬件为已调优版本）： [盒子桥淘宝店铺](https://item.taobao.com/item.htm?abbucket=16&detail_redpacket_pop=true&id=906794552661&ltk2=17440907659690jpsj3h7uiismft7vle37&ns=1&skuId=5933796995638) 
+  - For Users Outside Mainland China: Currently available through [AIFITLAB channels](https://aifitlab.com/products/joycon-robotics-controller) (Contact for international shipping options)
 
 If this project is helpful to you, please give us a star. We greatly appreciate it! ⭐ ⭐ ⭐ ⭐ ⭐
 
