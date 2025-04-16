@@ -14,6 +14,8 @@ import numpy as np
 import threading
 import logging
 
+JOYCON_SERIAL_SUPPORT = '9c:54:'
+
 class LowPassFilter:
     def __init__(self, alpha=0.1):
         self.alpha = alpha
@@ -162,15 +164,14 @@ class JoyconRobotics:
                  change_down_to_gripper: bool = False, # ZR to toggle gripper state is common for lerobot, ARX ARM and VixperX. But for UR, Sawyer and panda you could try this. ZR to go down and stick button to toggle gripper
                  lowpassfilter_alpha_rate = 0.05,
                  ):
+        
         if device == "right":
             self.joycon_id = get_R_id()
         elif device == "left":
             self.joycon_id = get_L_id()
         else:
             print("get a wrong device name of joycon")
-        # print(f"detect {device} {self.joycon_id=}")
-        if self.joycon_id[2][:6] != '9c:54:' and self.joycon_id != None:
-            raise IOError("There is no joycon for robotics")
+        device_serial = self.joycon_id[2][:6]
         
         # init joycon
         self.joycon = JoyCon(*self.joycon_id)
@@ -221,24 +222,26 @@ class JoyconRobotics:
         self.restart_episode_button = 0
         self.button_control = 0
         
+        if device_serial != JOYCON_SERIAL_SUPPORT and self.joycon_id != None:
+            raise IOError("There is no joycon for robotics")
+        
         self.running = True
         self.lock = threading.Lock()
         self.thread = threading.Thread(target=self.solve_loop, daemon=True)
         self.thread.start()
         
-        
+    def disconnnect(self):
+        self.joycon._close()
+    
     def reset_joycon(self):
         
-        print(f"\033[33mcalibrating(4 seconds)..., please place it horizontally on the desktop.\033[0m")
-    
+        print(f"\033[33mcalibrating(2 seconds)..., please place it horizontally on the desktop.\033[0m")
+
         self.gyro.calibrate()
+        time.sleep(2)
         self.gyro.reset_orientation
         self.orientation_sensor.reset_yaw()
-        time.sleep(2)
-        self.gyro.calibrate()
-        self.gyro.reset_orientation
-        self.orientation_sensor.reset_yaw()
-        time.sleep(2)
+
         print(f"\033[32mJoycon calibrations is complete.\033[0m")
     
     def check_limits_position(self):

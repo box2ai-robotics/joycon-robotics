@@ -1,5 +1,5 @@
 from .constants import JOYCON_VENDOR_ID, JOYCON_PRODUCT_IDS, JOYCON_SERIAL_HEAD
-from .constants import JOYCON_L_PRODUCT_ID, JOYCON_R_PRODUCT_ID, JOYCON_REPORT_DEFAULT, JOYCON_COLOR_SUPPORT
+from .constants import JOYCON_L_PRODUCT_ID, JOYCON_R_PRODUCT_ID, JOYCON_REPORT_DEFAULT, JOYCON_SERIAL_SUPPORT
 import hid
 import time
 import threading
@@ -34,7 +34,12 @@ class JoyCon:
         self.product_id  = product_id
         self.serial      = serial
         self.simple_mode = simple_mode  # TODO: It's for reporting mode 0x3f
-
+        
+        if serial[:12] not in JOYCON_SERIAL_HEAD:
+            self.calibrate_value = True
+        else:
+            self.calibrate_value = False
+            
         # setup internal state
         self._input_hooks = []
         self._input_report = bytes(self._INPUT_REPORT_SIZE)
@@ -43,6 +48,7 @@ class JoyCon:
         self.set_gyro_calibration((0, 0, 0), (1, 1, 1))
 
         # connect to joycon
+        self.enable = True
         self._joycon_device = self._open(vendor_id, product_id, serial=None)
         self._read_joycon_data()
         self._setup_sensors()
@@ -69,6 +75,7 @@ class JoyCon:
     def _close(self):
         if hasattr(self, "_joycon_device"):
             self._joycon_device.close()
+            self.enable = False
             del self._joycon_device
 
     def _read_input_report(self) -> bytes:
@@ -117,7 +124,7 @@ class JoyCon:
         return out
 
     def _update_input_report(self):  # daemon thread
-        while True:
+        while True and self.enable == True :
             report = self._read_input_report()
             # TODO, handle input reports of type 0x21 and 0x3f
             while report[0] != 0x30:
@@ -197,9 +204,9 @@ class JoyCon:
             self._GYRO_OFFSET_Z = offset_xyz
         if coeff_xyz:
             cx, cy, cz = coeff_xyz
-            self._GYRO_COEFF_X = 0x343b / cx if (cx != 0x343b and cx != 0) else 1
-            self._GYRO_COEFF_Y = 0x343b / cy if (cy != 0x343b and cy != 0) else 1
-            self._GYRO_COEFF_Z = 0x343b / cz if (cz != 0x343b and cz != 0) else 1
+            self._GYRO_COEFF_X = 0x343b / cx if (cx != 0x343b and cx != 0 and self.calibrate_value) else 1
+            self._GYRO_COEFF_Y = 0x343b / cy if (cy != 0x343b and cy != 0 and self.calibrate_value) else 1
+            self._GYRO_COEFF_Z = 0x343b / cz if (cz != 0x343b and cz != 0 and self.calibrate_value) else 1
 
     def set_accel_calibration(self, offset_xyz=None, coeff_xyz=None):
         if offset_xyz:
