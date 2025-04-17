@@ -26,7 +26,7 @@ install_requires = extra_requirements
 setup(
     name='joycon-robotics',
     version=version,
-    description='Nintendo Switch Joy-Con for robotics',
+    description='Joystick Controller for Robotics',
     long_description=readme,
     long_description_content_type='text/markdown',
     author='boxjod, Huanxu Lin',

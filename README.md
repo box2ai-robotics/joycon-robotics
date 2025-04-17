@@ -25,11 +25,11 @@
 
 #### Initial Pairing
 1. ​**First-time Bluetooth Pairing**:
-   - Press and hold the small circular button on the side of the Joy-Con for 3 seconds to enter pairing mode.
-   - On your computer, search for Bluetooth devices and select either `Joy-Con (R)` or `Joy-Con (L)` to complete pairing.
+   - Press and hold the small circular button on the side of the Joycon for 3 seconds to enter pairing mode.
+   - On your computer, search for Bluetooth devices and select either `Joycon (R)` or `Joycon (L)` to complete pairing.
 <p align="center">
   <picture>
-    <img alt="Joy-Con pairing button" src="media/bocon_pairing.png" style="max-width: 25%;">
+    <img alt="Joycon pairing button" src="media/bocon_pairing.png" style="max-width: 25%;">
   </picture>
 </p>
 
@@ -37,12 +37,12 @@
    - Upon successful pairing, the controller will vibrate at a fixed frequency.
    - ​**Single-controller mode**: Hold both trigger buttons (ZL + ZR) for 3 seconds.
    - ​**Dual-controller mode**: After both controllers vibrate, simultaneously press:
-     - Left Joy-Con's upper trigger (`L`) 
-     - Right Joy-Con's upper trigger (`R`)
+     - Left Joycon's upper trigger (`L`) 
+     - Right Joycon's upper trigger (`R`)
    - The system will allocate dedicated processes for connection monitoring.
 <p align="center">
   <picture>
-    <img alt="Joy-Con pairing button" src="media/bocon_binding.png" style="max-width: 59%;">
+    <img alt="Joycon pairing button" src="media/bocon_binding.png" style="max-width: 59%;">
   </picture>
 </p>
 
@@ -75,7 +75,7 @@
 </p>
 
 1. ​**Reset (Recommend)** 
-   - Right Joy-Con `Home` button ​**or** Left Joy-Con `O` (Capture button): Return to home position.  
+   - Right Joycon `Home` button ​**or** Left Joycon `O` (Capture button): Return to home position.  
   
 2. ​**Gripper Control**  
    - Right `ZR` ​**or** Left `ZL` (Lower triggers): Toggle gripper state:
@@ -125,9 +125,11 @@ Tested systems:
 ## More Info
 1. You can follow the [bilibili video account](https://space.bilibili.com/122291348)
 2. Join the discussion on the QQ group: 948755626
-3. Proprietary Tuned Edition Hardware Purchase Information:
+3. **joycon-robotics** is an open-source robotics controller project (full name: Joystick Controller for Robotics), **incompatible** with Nintendo® systems (including Joy-Con®) and **strictly prohibited** for gaming use. No warranties; use = full legal responsibility.
+4. Recommended Purchase Links:
   - 中国大陆用户：淘宝官方店铺购买链接（硬件为已调优版本）： [盒子桥淘宝店铺](https://item.taobao.com/item.htm?abbucket=16&detail_redpacket_pop=true&id=906794552661&ltk2=17440907659690jpsj3h7uiismft7vle37&ns=1&skuId=5933796995638) 
   - For Users Outside Mainland China: Currently available through [AIFITLAB channels](https://aifitlab.com/products/joycon-robotics-controller) (Contact for international shipping options)
+
 
 If this project is helpful to you, please give us a star. We greatly appreciate it! ⭐ ⭐ ⭐ ⭐ ⭐
 
