@@ -1,137 +1,226 @@
+# Joycon-Robotics: Low-Cost, Convenient Teleoperation for One- and Two-Arm Robots
 
-# Joycon-Robotics: Convenient and low-cost one- and two-arm teleoperation systems for robots
+<p align="center">
+  <a href="README.md">English</a> •
+  <a href="README_zh.md">中文</a>
+</p>
 
-## What's New?
+---
 
-- **April 1, 2025**: More new updates coming in [bocon](https://github.com/box2ai-robotics/bocon)
+## 🆕 What's New?
 
-- **February 24, 2025**: Added support for [Robosuite](https://github.com/box2ai-robotics/robosuite-joycon) controller
+- **2025-04-19**: Added support for initial parameters for all robot arms + updated [Chinese documentation](README_zh.md)
+- **2025-04-16**: Optimized yaw drift compensation with more robust auto-calibration  
+- **2025-02-24**: Added compatibility with [Robosuite](https://github.com/box2ai-robotics/robosuite-joycon)  
+- **2025-02-12**: Added support for [RLBench-ACT](https://github.com/box2ai-robotics/joycon-robotics) data collection
 
-- **February 12, 2025**: Added support for [RLBench-ACT](https://github.com/box2ai-robotics/joycon-robotics) data collection
+---
 
-## Installation (Recommend Ubuntu 20.04, 22.04 with Bluetooth)
+## 💻 Installation (Recommended: Ubuntu 20.04 / 22.04 with Bluetooth)
 
 ```bash
-  git clone https://github.com/box2ai-robotics/joycon-robotics.git
-  cd joycon-robotics
-  
-  pip install -e .
-  sudo apt-get update
-  sudo apt-get install -y dkms libevdev-dev libudev-dev cmake
-  make install
+git clone https://github.com/box2ai-robotics/joycon-robotics.git
+cd joycon-robotics
+
+pip install -e .
+sudo apt-get update
+sudo apt-get install -y dkms libevdev-dev libudev-dev cmake
+make install
 ```
 
-## Connection Setup
+---
 
-#### Initial Pairing
-1. ​**First-time Bluetooth Pairing**:
-   - Press and hold the small circular button on the side of the Joycon for 3 seconds to enter pairing mode.
-   - On your computer, search for Bluetooth devices and select either `Joycon (R)` or `Joycon (L)` to complete pairing.
+## 🔗 Connection Setup
+
+### 1. Initial Bluetooth Pairing
+
+1. **Enter Pairing Mode**
+   - Hold the small circular button on the Joy-Con for 3 seconds.
+   - In your system Bluetooth settings, connect to `Joycon (L)` or `Joycon (R)`.
+
 <p align="center">
-  <picture>
-    <img alt="Joycon pairing button" src="media/bocon_pairing.png" style="max-width: 25%;">
-  </picture>
+  <img src="media/bocon_pairing.png" alt="Joycon pairing button" style="max-width: 25%;">
 </p>
 
-2. ​**Connection Confirmation**:
-   - Upon successful pairing, the controller will vibrate at a fixed frequency.
-   - ​**Single-controller mode**: Hold both trigger buttons (ZL + ZR) for 3 seconds.
-   - ​**Dual-controller mode**: After both controllers vibrate, simultaneously press:
-     - Left Joycon's upper trigger (`L`) 
-     - Right Joycon's upper trigger (`R`)
-   - The system will allocate dedicated processes for connection monitoring.
+2. **Confirm Connection**
+   - Joy-Con will vibrate when connected.
+   - **Single Controller Mode**: Hold `ZL + ZR` for 3 seconds.
+   - **Dual Controller Mode**: After both Joy-Cons vibrate, press:
+     - Left: `L` (upper trigger)
+     - Right: `R` (upper trigger)
+
 <p align="center">
-  <picture>
-    <img alt="Joycon pairing button" src="media/bocon_binding.png" style="max-width: 59%;">
-  </picture>
+  <img src="media/bocon_binding.png" alt="Joycon binding" style="max-width: 59%;">
 </p>
 
-3. ​**Subsequent Connections**:
-   - For already paired devices, simply press the upper trigger (`L`/`R`) to auto-reconnect.
-   - A confirmation vibration will occur within 5 seconds. Follow Step 2 to finalize.
+### 2. Reconnecting
 
-4. ​**Testing**: Refer to the [Quick Start Tutorial](joyconrobotics_tutorial.ipynb).
+- For already paired devices, press `L` or `R` to auto-reconnect.
+- Wait for vibration confirmation and repeat step 2 above.
 
+---
 
-## Operational Manual
+## ⚡ Quick Start
 
-#### Coordinate System
-- Home Position: `(0, 0, 0)`
-- ​Front Direction: `X+` (end-effector facing)
-- ​Right Direction: `Y+`
-- ​Up Direction: `Z+`
+### 1. Basic Usage
 
-#### Joystick Control (End-Effector POV)
-- ``​↑``: Move forward along end-effector direction
-- ``​↓``: Move backward along end-effector direction
-- ``​←``: Strafe left (Y-)
-- ``​→``: Strafe right (Y+)
+```python
+from joyconrobotics import JoyconRobotics
+import time
 
-#### Button Functions
+joyconrobotics_right = JoyconRobotics("right")
+
+for i in range(1000):
+    pose, gripper, control_button = joyconrobotics_right.get_control()
+    print(f'{pose=}, {gripper=}, {control_button=}')
+    time.sleep(0.01)
+
+joyconrobotics_right.disconnnect()
+```
+
+---
+
+### 2. Custom Parameters for Robot Arms
+
+```python
+# Initial pose [x, y, z, roll, pitch, yaw]
+init_gpos = [0.210, -0.4, -0.047, -3.1, -1.45, -1.5]
+
+# Pose limits: [[min], [max]]
+glimit = [
+    [0.210, -0.4, -0.047, -3.1, -1.45, -1.5],
+    [0.420, 0.4, 0.30, 3.1, 1.45, 1.5]
+]
+
+offset_position_m = init_gpos[:3]
+```
+
+---
+
+### 3. Lightweight Collaborative Arms (e.g., ViperX 300S, So-100 Plus)
+
+```python
+JR_controller = JoyconRobotics(
+    device="right",
+    glimit=glimit,
+    offset_position_m=offset_position_m,
+    pitch_down_double=True,
+    gripper_close=-0.15,
+    gripper_open=0.5
+)
+```
+
+---
+
+### 4. Industrial Arms (e.g., UR, Panda, Sawyer)
+
+```python
+import math
+
+JR_controller = JoyconRobotics(
+    device="right",
+    offset_position_m=offset_position_m,
+    pitch_down_double=False,
+    offset_euler_rad=[0, -math.pi, 0],
+    euler_reverse=[1, -1, 1],
+    direction_reverse=[-1, 1, 1],
+    pure_xz=False
+)
+```
+
+👉 More code examples: [Quick Start Tutorial Notebook](joyconrobotics_tutorial.ipynb)
+
+---
+
+## 🎮 Control Manual
+
+### Coordinate System
+
+- Home: `(offset_position_x, offset_position_y, offset_position_z)`
+- Forward: `X+`
+- Right: `Y+`
+- Up: `Z+`
+
+---
+
+### End-Effector Attitude Control
+
+| Action | Direction |
+|--------|-----------|
+| Joystick ↑         | Forward (X+)      |
+| Joystick ↓         | Backward (X−)     |
+| Joystick ←         | Strafe Left (Y−)  |
+| Joystick →         | Strafe Right (Y+) |
+| Joystick ● (Press) | Down (Z−)         |
+| R/L                | Up (Z+)           |
+
+---
+
+### Button Mapping
+
 <p align="center">
-  <picture>
-    <img alt="Controller reset position" src="media/bocon_homing.png" style="max-width: 40%;">
-  </picture>
+  <img src="media/bocon_homing.png" alt="Joycon reset" style="max-width: 40%;">
 </p>
 
-1. ​**Reset (Recommend)** 
-   - Right Joycon `Home` button ​**or** Left Joycon `O` (Capture button): Return to home position.  
-  
-2. ​**Gripper Control**  
-   - Right `ZR` ​**or** Left `ZL` (Lower triggers): Toggle gripper state:
-     - Open → Close (when pressed)
-     - Close → Open (when pressed)
+| Function         | Left Joycon         | Right Joycon        |
+|------------------|---------------------|----------------------|
+| **Reset Pose**   | `Capture (O)`       | `Home`              |
+| **Gripper**      | `ZL`                | `ZR`                |
+| **Record Stop**  | —                   | `A` *(custom)*      |
+| **Record Start** | —                   | `Y` *(custom)*      |
 
-3. ​**Height Adjustment**  
-   - ``Joystick press (click down)``: Lower end-effector (`Z-`)  
-   - `L`/`R` (Upper triggers): Raise end-effector (`Z+`)  
+*All other buttons are user-configurable.*
 
-4. ​**Linear Movement**  
-   - Left ``D-pad ↑`` ​**or** Right `X`: Move forward (`X+`)  
-   - Left ``D-pad ↓`` ​**or** Right `B`: Move backward (`X-`)  
+---
 
-5. ​**Data Recording**  
-   - Right `A`: Stop current dataset recording (requires custom implementation)  
-   - Right `Y`: Restart current dataset recording (error recovery)  
+## ❓ FAQ
 
-#### Customization
-- All other buttons are user-configurable.
+### Q1: No Vibration / Can't Connect
+**Solution:**
+1. Re-run `make install`  
+2. Remove and re-pair Bluetooth devices  
+3. Restart your computer  
+4. Fully power off Joy-Con, re-enter pairing mode
 
-## FAQ
-### Connection Issues
-#### Q1: Unable to connect / No vibration on successful connection
-**Solution:**  
-1. Re-run the `install` command to verify dependency installation  
-2. Briefly press the pairing button to power off  
-3. Remove the device from your computer's Bluetooth list  
-4. Restart your computer  
-5. Long-press the pairing button and reconnect via Bluetooth  
+---
 
-#### Q2: Frequent disconnections with unstable data
-Solution: 
-1. Charge the controller for 30 minutes (auto-shutdown indicates low battery)  
-2. Restart both controller and computer  
-   - *Note: Ubuntu has known Bluetooth compatibility issues*
+### Q2: Frequent Disconnection or Data Loss  
+**Solution:**
+- Charge Joy-Con for 30+ minutes  
+- ``Remove the Bluetooth pairing info from your computer``
+- Restart both computer and Joy-Con  
+- ⚠ Ubuntu Bluetooth compatibility can vary by device
 
-### System Compatibility
+---
 
-#### Q1: Does it support Windows, VM, WSL or Mac?  
-**A1:** Currently no - due to kernel-level driver requirements.  
-Tested systems:  
-- Ubuntu 20.04 LTS  
-- Ubuntu 22.04 LTS  
-*(Other systems may work but are unsupported)*
+## 💡 Compatibility
 
-## More Info
-1. You can follow the [bilibili video account](https://space.bilibili.com/122291348)
-2. Join the discussion on the QQ group: 948755626
-3. **joycon-robotics** is an open-source robotics controller project (full name: Joystick Controller for Robotics), **incompatible** with Nintendo® systems (including Joy-Con®) and **strictly prohibited** for gaming use. No warranties; use = full legal responsibility.
-4. Recommended Purchase Links:
-  - 中国大陆用户：淘宝官方店铺购买链接（硬件为已调优版本）： [盒子桥淘宝店铺](https://item.taobao.com/item.htm?abbucket=16&detail_redpacket_pop=true&id=906794552661&ltk2=17440907659690jpsj3h7uiismft7vle37&ns=1&skuId=5933796995638) 
-  - For Users Outside Mainland China: Currently available through [AIFITLAB channels](https://aifitlab.com/products/joycon-robotics-controller) (Contact for international shipping options)
+| System           | Supported |
+|------------------|-----------|
+| Ubuntu 20.04     | ✅        |
+| Ubuntu 22.04     | ✅        |
+| Windows / WSL / Mac / VM | ❌ *(due to kernel-level drivers)* |
 
+---
 
-If this project is helpful to you, please give us a star. We greatly appreciate it! ⭐ ⭐ ⭐ ⭐ ⭐
+## 📦 Hardware Purchase
 
+- **China Mainland:**  
+  淘宝店铺 👉 [盒子桥淘宝店铺](https://item.taobao.com/item.htm?id=906794552661)
 
+- **International Users:**  
+  Via AIFITLAB 👉 [Purchase Link](https://aifitlab.com/products/joycon-robotics-controller)
+
+---
+
+## 📢 Community & Support
+
+- Video Tutorials: [Bilibili 视频账号](https://space.bilibili.com/122291348)  
+- QQ交流群：948755626  
+- Open-source license: For research/robotics use only. **Strictly prohibited** for gaming or Nintendo systems.  
+- Use at your own risk — no warranty provided.
+
+---
+
+If you find this project helpful, **please star the repo**! ⭐⭐⭐⭐⭐
 
