@@ -44,10 +44,9 @@ make install
 
 2. **确认连接**
    - 连接成功时Joy-Con会震动
-   - **单控制器模式**：长按 `ZL + ZR` 3秒
-   - **双控制器模式**：双Joy-Con震动后按下：
-     - 左控制器：`L`（顶部肩键）
-     - 右控制器：`R`（顶部肩键）
+   - **单控制器模式**：同时长按 `R + ZR`（上下两个肩键） 3秒
+   - **双控制器模式**：双Joy-Con震动后同时按下：
+     - 左控制器的`L`（顶部肩键） + 右控制器的`R`（顶部肩键）
 
 <p align="center">
   <img src="media/bocon_binding.png" alt="Joycon绑定" style="max-width: 59%;">

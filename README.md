@@ -44,10 +44,9 @@ make install
 
 2. **Confirm Connection**
    - Joy-Con will vibrate when connected.
-   - **Single Controller Mode**: Hold `ZL + ZR` for 3 seconds.
+   - **Single Controller Mode**: Hold `R + ZR` for 3 seconds.
    - **Dual Controller Mode**: After both Joy-Cons vibrate, press:
-     - Left: `L` (upper trigger)
-     - Right: `R` (upper trigger)
+     - Left: `L` (upper trigger)  + Right: `R` (upper trigger)
 
 <p align="center">
   <img src="media/bocon_binding.png" alt="Joycon binding" style="max-width: 59%;">
