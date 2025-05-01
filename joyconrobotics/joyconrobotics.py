@@ -415,8 +415,8 @@ class JoyconRobotics:
                                      math.cos(pitch) * math.sin(yaw), 
                                      math.sin(pitch))
                                      
-        self.direction_vector_right = vec3(math.cos(roll) * math.sin(yaw), 
-                                           math.cos(roll) * math.cos(yaw), 
+        self.direction_vector_right = vec3(math.cos(roll) * math.sin(-yaw), 
+                                           math.cos(roll) * math.cos(-yaw), 
                                            math.sin(roll))
         
         self.direction_vector_up = vec3(math.sin(-roll) * math.sin(-pitch), 
