@@ -165,8 +165,8 @@ JR_controller = JoyconRobotics(
 |------------------|---------------------|----------------------|
 | **Reset Pose**   | `Capture (O)`       | `Home`              |
 | **Gripper**      | `ZL`                | `ZR`                |
-| **Record Stop**  | —                   | `A` *(custom)*      |
-| **Record Start** | —                   | `Y` *(custom)*      |
+| **Delete and Record**  | —                   | `A` *(custom)*      |
+| **Save and Record New** | —                   | `Y` *(custom)*      |
 
 *All other buttons are user-configurable.*
 
