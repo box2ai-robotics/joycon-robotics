@@ -24,7 +24,6 @@ def get_device_ids(debug=False):
             continue
         
         if serial[0:6] != '9c:54:':
-            print(f'{serial=}')
             return (0x057A, product_id, serial)
         
         out.append((vendor_id, product_id, serial))
