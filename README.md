@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="media/bocon_robot.png" alt="Joycon pairing button" style="max-width: 100%;">
+</p>
+
 # Joycon-Robotics: Low-Cost, Convenient Teleoperation for One- and Two-Arm Robots
 
 <p align="center">
@@ -24,7 +28,7 @@ cd joycon-robotics
 
 pip install -e .
 sudo apt-get update
-sudo apt-get install -y dkms libevdev-dev libudev-dev cmake
+sudo apt-get install -y dkms libevdev-dev libudev-dev cmake git
 make install
 ```
 
@@ -203,13 +207,15 @@ JR_controller = JoyconRobotics(
 ---
 
 ## 📦 Hardware Purchase
+<p align="center">
+  <img src="media/bocon_colors.jpg" alt="Joycon pairing button" style="max-width: 60%;">
+</p>
 
 - **China Mainland:**  
   淘宝店铺 👉 [盒子桥淘宝店铺](https://item.taobao.com/item.htm?id=906794552661)
 
 - **International Users:**  
   Via AIFITLAB 👉 [Purchase Link](https://aifitlab.com/products/joycon-robotics-controller)
-
 ---
 
 ## 📢 Community & Support
