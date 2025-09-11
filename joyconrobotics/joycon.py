@@ -215,9 +215,9 @@ class JoyCon:
             self._ACCEL_OFFSET_Z = offset_xyz
         if coeff_xyz:
             cx, cy, cz = coeff_xyz
-            self._ACCEL_COEFF_X = 0x4000 / cx if (cx != 0x4000 and cx != 0) else 1
-            self._ACCEL_COEFF_Y = 0x4000 / cy if (cy != 0x4000 and cy != 0) else 1
-            self._ACCEL_COEFF_Z = 0x4000 / cz if (cz != 0x4000 and cz != 0) else 1
+            self._ACCEL_COEFF_X = 0x4000 / cx if (cx != 0x4000 and cx != 0 and self.calibrate_value) else 1
+            self._ACCEL_COEFF_Y = 0x4000 / cy if (cy != 0x4000 and cy != 0 and self.calibrate_value) else 1
+            self._ACCEL_COEFF_Z = 0x4000 / cz if (cz != 0x4000 and cz != 0 and self.calibrate_value) else 1
 
     def register_update_hook(self, callback):
         self._input_hooks.append(callback)
