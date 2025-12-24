@@ -12,7 +12,8 @@
 ---
 
 ## 🆕 What's New?
-
+- **2025-12-24**: Added hidapi_for_windows/README_hidapi.md to enable the core functionality of this repository to be used on Windows.  
+- **2025-12-05**: Added the `all_button_return` parameter, allowing joyconrobotics to output encoded values for all buttons by default.
 - **2025-04-19**: Added support for initial parameters for all robot arms + updated [Chinese documentation](README_zh.md)
 - **2025-04-16**: Optimized yaw drift compensation with more robust auto-calibration  
 - **2025-02-24**: Added compatibility with [Robosuite](https://github.com/box2ai-robotics/robosuite-joycon)  

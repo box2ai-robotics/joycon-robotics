@@ -1,0 +1,10 @@
+*.swp
+CMakeCache.txt
+CMakeFiles
+Makefile
+cmake_install.cmake
+joycond
+install_manifest.txt
+.ccls-cache
+build
+compile_commands.json

@@ -1,0 +1,12 @@
+ProgressiveScan 1
+StartInTray 0
+capture key_44
+home 0
+sl_l 0
+sl_r 0
+sr_l 0
+sr_r 0
+shake 0
+reset_mouse joy_10
+active_gyro 0
+0,0,0,0,-710,0,0

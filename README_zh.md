@@ -8,7 +8,8 @@
 ---
 
 ## 🆕 最新动态
-
+- **2025-12-24**: 增加 [hidapi_for_windows](hidapi_for_windows/README_hidapi.md) 使该仓库的核心原理可以再Windows下使用。
+- **2025-12-05**: 增加 `all_button_return` 参数，使joyconrobotics可以默认输出所有按键的编码
 - **2025-04-19**：新增全机型初始参数支持 + 更新[中文文档](README_zh.md)  
 - **2025-04-16**：优化偏航漂移补偿算法，自动校准更鲁棒  
 - **2025-02-24**：新增 [Robosuite](https://github.com/box2ai-robotics/robosuite-joycon) 兼容支持  
