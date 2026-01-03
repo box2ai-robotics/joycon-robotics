@@ -24,7 +24,7 @@
 # 运行ViGEmBusSetup_x64.msi（64位系统，如果是32位系统请运行ViGEmBusSetup_x86.msi）
 
 # python安装hidapi与numpy
-pip install hidapi numpy
+pip install hidapi numpy matplotlib
 pip uninstall hid # 不能与hidapi共存，否则会报错 ImportError: Unable to load any of the following libraries:hidapi.dll
 
 # 验证安装
