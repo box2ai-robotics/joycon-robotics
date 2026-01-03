@@ -25,6 +25,7 @@
 
 # python安装hidapi与numpy
 pip install hidapi numpy
+pip uninstall hid # 不能与hidapi共存，否则会报错 ImportError: Unable to load any of the following libraries:hidapi.dll
 
 # 验证安装
 python -c "import hid; import numpy; print('✅ 所有依赖已安装')"

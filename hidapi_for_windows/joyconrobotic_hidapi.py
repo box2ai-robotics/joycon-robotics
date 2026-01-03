@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-SO-100 Plus JoyCon控制 - Windows版本（hidapi，更稳定）
+JoyCon控制 - hidapi版本
 
 使用hidapi直接读取JoyCon，性能更好，数据更稳定
 
@@ -9,19 +9,22 @@ SO-100 Plus JoyCon控制 - Windows版本（hidapi，更稳定）
 
 前置要求:
     1. JoyCon已通过蓝牙连接到Windows
-    2. 运行一次BetterJoy（启用IMU），然后关闭
+    2. 运行一次BetterJoy(最小化)
 
 运行:
-    python lerobot_plus_joycon_windows_hidapi.py
+    python .\hidapi_for_windows\joyconrobotic_hidapi.py
 """
 
 import numpy as np
 import math
 import time
 import os
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 
+import hid
 # 导入hidapi版本的JoyCon读取器
-from hidapi.joycon_hidapi_reader import JoyConHIDAPIReader
+from joycon_hidapi_reader import JoyConHIDAPIReader
 
 class JoyConController:
     """JoyCon控制器（hidapi版本）"""
@@ -168,6 +171,176 @@ class JoyConController:
         """断开连接"""
         self.reader.disconnect()
 
+class RealTimeVisualizer:
+    def __init__(self, max_history=500):
+        self.fig = None
+        self.ax = None
+        self.initialized = False
+        
+        # 数据累计相关属性
+        self.history_positions = []  # 累计所有位置数据
+        self.history_orientations = []  # 累计所有姿态数据
+        self.max_history = max_history  # 最大历史数据量
+        self.cumulative_x = []
+        self.cumulative_y = [] 
+        self.cumulative_z = []
+        self.cumulative_roll = []
+        self.cumulative_pitch = []
+        self.cumulative_yaw = []
+    
+    def add_pose_data(self, x, y, z, roll, pitch, yaw):
+        """累计单帧位姿数据"""
+        self.cumulative_x.append(x)
+        self.cumulative_y.append(y)
+        self.cumulative_z.append(z)
+        self.cumulative_roll.append(roll)
+        self.cumulative_pitch.append(pitch)
+        self.cumulative_yaw.append(yaw)
+        
+        # 限制历史数据长度
+        if len(self.cumulative_x) > self.max_history:
+            self.cumulative_x.pop(0)
+            self.cumulative_y.pop(0)
+            self.cumulative_z.pop(0)
+            self.cumulative_roll.pop(0)
+            self.cumulative_pitch.pop(0)
+            self.cumulative_yaw.pop(0)
+    
+    def get_cumulative_data(self):
+        """获取累计的数据"""
+        return (self.cumulative_x, self.cumulative_y, self.cumulative_z,
+                self.cumulative_roll, self.cumulative_pitch, self.cumulative_yaw)
+    
+    def clear_cumulative_data(self):
+        """清空累计数据"""
+        self.cumulative_x.clear()
+        self.cumulative_y.clear()
+        self.cumulative_z.clear()
+        self.cumulative_roll.clear()
+        self.cumulative_pitch.clear()
+        self.cumulative_yaw.clear()
+
+    def initialize(self):
+        """初始化可视化窗口"""
+        plt.ion()  # 开启交互模式[5](@ref)
+        self.fig = plt.figure(figsize=(12, 8))
+        self.ax = self.fig.add_subplot(111, projection='3d')
+        self.initialized = True
+        
+        # 设置初始视图参数
+        self.ax.set_xlabel('X轴')
+        self.ax.set_ylabel('Y轴')
+        self.ax.set_zlabel('Z轴')
+        self.ax.set_title('JoyCon机器人实时3D轨迹可视化')
+        
+        # 设置坐标轴范围
+        self.ax.set_xlim([-0.3, 0.3])
+        self.ax.set_ylim([-0.3, 0.3])
+        self.ax.set_zlim([-0.1, 0.5])
+        
+        # 添加网格
+        self.ax.grid(True)
+        
+        plt.tight_layout()
+
+    def _adjust_axes_range(self, x_data, y_data, z_data):
+        """动态调整坐标轴范围"""
+        margin = 0.1
+        
+        if len(x_data) > 0:
+            x_min, x_max = min(x_data), max(x_data)
+            y_min, y_max = min(y_data), max(y_data)
+            z_min, z_max = min(z_data), max(z_data)
+            
+            # 确保有足够的显示范围
+            x_range = max(x_max - x_min, 0.1)
+            y_range = max(y_max - y_min, 0.1)
+            z_range = max(z_max - z_min, 0.1)
+            
+            self.ax.set_xlim([x_min - margin, x_max + margin])
+            self.ax.set_ylim([y_min - margin, y_max + margin])
+            self.ax.set_zlim([z_min - margin, z_max + margin])
+
+    def _update_display_info(self, x, y, z, roll, pitch, yaw, frame_count):
+        """更新显示信息"""
+        # 转换为角度显示
+        roll_deg = math.degrees(roll)
+        pitch_deg = math.degrees(pitch)
+        yaw_deg = math.degrees(yaw)
+        
+        self.ax.set_xlabel('X轴 (米)')
+        self.ax.set_ylabel('Y轴 (米)')
+        self.ax.set_zlabel('Z轴 (米)')
+        
+        self.ax.set_title(
+            f'机器人实时运动轨迹 - 累计{frame_count}帧\n'
+            f'位置: X={x:.3f}m, Y={y:.3f}m, Z={z:.3f}m\n'
+            f'姿态: Roll={roll_deg:.1f}°, Pitch={pitch_deg:.1f}°, Yaw={yaw_deg:.1f}°'
+        )
+        
+        self.ax.legend(loc='upper left')
+
+    def update(self, target_pose):
+        """更新可视化显示"""
+        if not self.initialized:
+            self.initialize()
+        
+        # 获取数据
+        x, y, z, roll, pitch, yaw = target_pose
+        
+        if len(str(x)) == 0 or x is None:  # 更健壮的空值检查
+            return
+    
+        # 累计数据
+        self.add_pose_data(x, y, z, roll, -pitch, yaw)
+
+        # 获取累计数据
+        cum_x, cum_y, cum_z, cum_roll, cum_pitch, cum_yaw = self.get_cumulative_data()
+        
+        if len(cum_x) == 0:
+            return
+
+        # 清空当前图形
+        self.ax.clear()
+        
+        # 绘制累计运动轨迹
+        if len(cum_x) > 1:
+            self.ax.plot(cum_x, cum_y, cum_z, 'r-', alpha=0.7, linewidth=2, 
+                        label=f'运动轨迹 ({len(cum_x)}帧)')
+        
+        # 绘制当前位置点
+        current_x, current_y, current_z = cum_x[-1], cum_y[-1], cum_z[-1]
+        self.ax.scatter(current_x, current_y, current_z, c='blue', s=100, 
+                    marker='o', label='当前位置')
+        
+        # 绘制方向箭头
+        current_roll, current_pitch, current_yaw = cum_roll[-1], cum_pitch[-1], cum_yaw[-1]
+        arrow_length = 0.05
+        dx = math.cos(current_pitch) * math.cos(current_yaw) * arrow_length
+        dy = math.cos(current_pitch) * math.sin(current_yaw) * arrow_length
+        dz = math.sin(current_pitch) * arrow_length
+        
+        self.ax.quiver(current_x, current_y, current_z, dx, dy, dz, 
+                    color='green', linewidth=2, arrow_length_ratio=0.3, 
+                    label='末端朝向')
+        
+        # 动态调整坐标轴范围
+        self._adjust_axes_range(cum_x, cum_y, cum_z)
+        
+        # 更新标题和信息显示
+        self._update_display_info(current_x, current_y, current_z, 
+                                current_roll, current_pitch, current_yaw, 
+                                len(cum_x))
+        
+        # 刷新显示
+        plt.draw()
+        plt.pause(0.01)
+        
+        def close(self):
+            """关闭可视化"""
+            if self.initialized:
+                plt.ioff()
+                plt.close(self.fig)
 
 def main():
     """主函数"""
@@ -183,15 +356,16 @@ def main():
         print("❌ 无法连接JoyCon")
         print("\n请确保:")
         print("1. JoyCon已通过蓝牙连接")
-        print("2. 已运行一次BetterJoy（启用IMU），然后关闭")
+        print("2. 启动BetterJoy（最小化）")
         return
     
     # 校准
     reader.calibrate(samples=100)
     
-    # 创建控制器
+    # 创建控制器和可视化器
     controller = JoyConController(reader)
-    
+    visualizer = RealTimeVisualizer()
+
     print("\n" + "=" * 60)
     print("JoyCon控制说明 (hidapi版本):")
     print("  【位置控制 - 第一人称视角】")
@@ -213,10 +387,29 @@ def main():
     print("=" * 60)
     print()
     
-    
+    step_count = 0
+
     try:
-        # 输出图像
-        t = t + 1
+        while 1:
+            # 输出图像
+            # 读取控制输入
+            target_pose, gripper_state, button_control = controller.get_control()
+            visualizer.update(target_pose)
+
+            # 打印target_pose（与Linux版本格式一致）
+            if step_count % 100 == 0:
+                px, py, pz, roll, pitch, yaw = target_pose
+                print(f"target_pose: ['{px:.3f}', '{py:.3f}', '{pz:.3f}', "
+                        f"'{roll:.3f}', '{pitch:.3f}', '{yaw:.3f}']")
+            
+            # 调试：每500步打印一次摇杆状态
+            if step_count % 500 == 0:
+                state_debug = controller.reader.get_state()
+                print(f"  [调试] 摇杆: X={state_debug['stick_x']:.3f} Y={state_debug['stick_y']:.3f}")
+
+            
+            step_count += 1
+            time.sleep(0.001)
     except KeyboardInterrupt:
         print("\n🛑 用户中断")
     
