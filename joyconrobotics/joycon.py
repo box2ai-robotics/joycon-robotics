@@ -1,5 +1,6 @@
-from .constants import JOYCON_VENDOR_ID, JOYCON_PRODUCT_IDS, JOYCON_SERIAL_HEAD
-from .constants import JOYCON_L_PRODUCT_ID, JOYCON_R_PRODUCT_ID, JOYCON_REPORT_DEFAULT, JOYCON_SERIAL_SUPPORT
+from .constants import JOYCON_VENDOR_ID, JOYCON_PRODUCT_IDS
+from .constants import JOYCON_L_PRODUCT_ID, JOYCON_R_PRODUCT_ID, JOYCON_REPORT_DEFAULT
+from .constants import _match_p1
 import hid
 import time
 import threading
@@ -27,15 +28,15 @@ class JoyCon:
         if product_id not in JOYCON_PRODUCT_IDS:
             raise ValueError(f'product_id is invalid: {product_id!r}')
         
-        if serial[:9] not in JOYCON_SERIAL_HEAD:
-            raise ValueError(f'serial is invalid: {serial!r}')
+        if not _match_p1(serial):
+            raise IOError('joycon connect failed')
 
         self.vendor_id   = vendor_id
         self.product_id  = product_id
         self.serial      = serial
         self.simple_mode = simple_mode  # TODO: It's for reporting mode 0x3f
         
-        if serial[:9] not in JOYCON_SERIAL_HEAD:
+        if not _match_p1(serial):
             self.calibrate_value = True
         else:
             self.calibrate_value = False

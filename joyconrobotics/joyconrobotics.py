@@ -8,13 +8,13 @@ from .joycon import JoyCon
 from .gyro import GyroTrackingJoyCon
 from .event import ButtonEventJoyCon
 from .device import get_R_id, get_L_id
+from .constants import _match_p0
 
 from scipy.spatial.transform import Rotation as R
 import numpy as np
 import threading
 import logging
 
-JOYCON_SERIAL_SUPPORT = '9c:54:'
 
 class LowPassFilter:
     def __init__(self, alpha=0.1):
@@ -173,7 +173,9 @@ class JoyconRobotics:
             self.joycon_id = get_L_id()
         else:
             print("get a wrong device name of joycon")
-        device_serial = self.joycon_id[2][:6]
+
+        if not _match_p0(self.joycon_id[2]):
+            raise IOError("joycon connect failed")
         
         # init joycon
         self.joycon = JoyCon(*self.joycon_id)
@@ -229,9 +231,6 @@ class JoyconRobotics:
         self.all_button_return = all_button_return
         
         self.button_control = 0
-        
-        if device_serial != JOYCON_SERIAL_SUPPORT and self.joycon_id != None:
-            raise IOError("There is no joycon for robotics")
         
         self.running = True
         self.lock = threading.Lock()
@@ -565,10 +564,3 @@ class JoyconRobotics:
         # glimit = [x_speed, y_speed, z_speed, _, _, yaw_speed]
         self.dof_speed = dof_speed
         return
-    
-    
-    
-    
-    
-    
-    
